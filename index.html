@@ -26,8 +26,8 @@
             /* Status Colors */
             --status-aberto-bg: rgba(34, 197, 94, 0.15);
             --status-aberto-text: #4ade80;
-            --status-atencao-bg: rgba(250, 204, 21, 0.15);
-            --status-atencao-text: #facc15;
+            --status-checkin-bg: rgba(249, 115, 22, 0.15);
+            --status-checkin-text: #fb923c;
             --status-finalizado-bg: rgba(248, 113, 113, 0.15);
             --status-finalizado-text: #f87171;
         }
@@ -83,6 +83,29 @@
         h1 { font-size: 1.5rem; color: var(--text-main); flex: 1; }
         h2 { font-size: 1.2rem; color: white; margin-bottom: 10px; }
 
+        /* --- ABAS (TABS) --- */
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         /* --- CARDS DE VOO (DASHBOARD) --- */
         .card {
             background-color: var(--bg-card);
@@ -94,9 +117,10 @@
             position: relative;
         }
         .card:active { transform: scale(0.98); }
+        
         .card.status-aberto { border-left-color: #4ade80; }
         .card.status-finalizado { border-left-color: #f87171; }
-        .card.status-atencao { border-left-color: #facc15; }
+        .card.status-checkin { border-left-color: #fb923c; }
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .flight-code { font-size: 1.4rem; font-weight: 700; color: #fff; }
@@ -105,12 +129,32 @@
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .badge.aberto { background: var(--status-aberto-bg); color: var(--status-aberto-text); }
         .badge.finalizado { background: var(--status-finalizado-bg); color: var(--status-finalizado-text); }
-        .badge.atencao { background: var(--status-atencao-bg); color: var(--status-atencao-text); }
+        .badge.checkin { background: var(--status-checkin-bg); color: var(--status-checkin-text); }
 
         .card-actions { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; }
         .btn-action { flex: 1; padding: 10px; border: none; background: var(--bg-hover); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-primary { background: var(--primary); }
         .btn-primary:hover { background: var(--primary-dark); }
+
+        /* --- COMENTÁRIOS --- */
+        .comment-box {
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        .comment-user { color: var(--primary); font-weight: 700; }
+        .comment-time { color: var(--text-secondary); }
+        .comment-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; }
+        
+        .input-group { display: flex; gap: 10px; margin-top: 20px; }
 
         /* --- LISTAS E CHECKLISTS --- */
         .service-item {
@@ -177,14 +221,34 @@
         <div id="view-flight" class="screen">
             <header>
                 <button class="btn-back" onclick="navTo('view-dashboard')">←</button>
-                <h1 id="flight-title">Voo</h1>
-                <span id="flight-status-badge" class="badge"></span>
+                <div style="flex:1">
+                    <h1 id="flight-title" style="margin-bottom:5px;">Voo</h1>
+                    <select id="status-selector" class="form-select" style="width: auto; margin-bottom: 0; padding: 6px; font-size: 0.8rem; border-color: var(--border-color);" onchange="alterarStatusVoo(this.value)">
+                        <option value="status-aberto">🟢 ABERTO</option>
+                        <option value="status-checkin">🟠 CHECKIN FINALIZADO</option>
+                        <option value="status-finalizado">🔴 FINALIZADO</option>
+                    </select>
+                </div>
             </header>
-            <div style="margin-bottom: 20px;">
-                <h2 style="font-size: 1rem; color: var(--text-secondary);">SERVIÇOS NO VOO</h2>
-                <div id="service-list"></div>
+
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchFlightTab('services')">SERVIÇOS</button>
+                <button class="tab-btn" onclick="switchFlightTab('comments')">COMENTÁRIOS</button>
             </div>
-            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-top: 40px;" id="empty-msg">Nenhum serviço especial.</div>
+
+            <div id="tab-services" class="tab-content active">
+                <div id="service-list"></div>
+                <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-top: 40px;" id="empty-msg">Nenhum serviço especial.</div>
+            </div>
+
+            <div id="tab-comments" class="tab-content">
+                <div id="comments-list" style="margin-bottom: 20px;"></div>
+                
+                <div class="input-group">
+                    <input id="input-comment" class="form-input" style="margin-bottom:0;" placeholder="Digite um comentário ou aviso...">
+                    <button class="btn-action btn-primary" style="flex:0 0 60px;" onclick="addComment()">➤</button>
+                </div>
+            </div>
         </div>
 
         <div id="view-service" class="screen">
@@ -254,12 +318,12 @@
             measurementId: "G-6082JH911G"
         };
 
-        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        let currentUserEmail = "";
 
-        // --- SISTEMA DE LOGIN & WHITELIST ---
+        // --- LOGIN & WHITELIST ---
         window.fazerLogin = async () => {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
@@ -269,43 +333,37 @@
             msg.innerText = "Verificando...";
 
             try {
-                // 1. Tenta logar
                 const userCredential = await signInWithEmailAndPassword(auth, email, pass);
                 const user = userCredential.user;
-
-                // 2. Verifica Whitelist no Firestore
                 const whitelistRef = doc(db, "whitelist", user.email);
                 const docSnap = await getDoc(whitelistRef);
 
                 if (docSnap.exists()) {
-                    // Sucesso total
                     msg.innerText = "";
                 } else {
-                    // Login existe, mas não está na lista VIP
                     throw new Error("Usuário não autorizado pelo administrador.");
                 }
             } catch (error) {
                 msg.innerText = "Erro: " + error.message;
-                signOut(auth); // Desloga se falhar na whitelist
+                signOut(auth);
             }
         };
 
         window.sair = () => signOut(auth);
 
-        // Monitorar Auth
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Verificar whitelist novamente (segurança extra)
                 const whitelistRef = doc(db, "whitelist", user.email);
                 const docSnap = await getDoc(whitelistRef);
                 
                 if(docSnap.exists()) {
+                    currentUserEmail = user.email;
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-container').classList.remove('hidden');
                     document.getElementById('user-info').innerHTML = `
                         ${user.email.split('@')[0]} <span class="logout-link" onclick="sair()">(Sair)</span>
                     `;
-                    iniciarAppEmTempoReal(); // Inicia o download dos dados
+                    iniciarAppEmTempoReal();
                 } else {
                     signOut(auth);
                 }
@@ -316,13 +374,12 @@
         });
 
 
-        // --- LÓGICA DO APP (MIGRADO PARA FIRESTORE) ---
+        // --- LÓGICA DO APP ---
         
-        let localFlights = []; // Cache local dos dados vindos do banco
+        let localFlights = [];
         let currentFlightId = null;
         let currentServiceIndex = null;
 
-        // Listener Real-Time (O coração do app)
         function iniciarAppEmTempoReal() {
             const q = query(collection(db, "voos"), orderBy("createdAt", "desc"));
             
@@ -332,24 +389,32 @@
                     ...doc.data()
                 }));
                 renderDashboard();
-                // Se estiver dentro de um voo, atualiza ele também
                 if(currentFlightId) {
                     const updatedFlight = localFlights.find(f => f.id === currentFlightId);
-                    if(updatedFlight) renderServiceList(updatedFlight);
+                    if(updatedFlight) {
+                        renderFlightDetails(updatedFlight);
+                    }
                 }
             });
         }
 
-        // --- FUNÇÕES DE RENDERIZAÇÃO (UI) ---
+        // --- RENDERIZAÇÃO ---
+
+        const getStatusConfig = (status) => {
+            switch(status) {
+                case 'status-aberto': return { text: 'Aberto', class: 'aberto' };
+                case 'status-checkin': return { text: 'Check-in Finalizado', class: 'checkin' };
+                case 'status-finalizado': return { text: 'Finalizado', class: 'finalizado' };
+                default: return { text: 'Aberto', class: 'aberto' };
+            }
+        };
 
         window.renderDashboard = () => {
             const list = document.getElementById('flight-list');
             list.innerHTML = '';
             
             localFlights.forEach(flight => {
-                const badgeText = flight.status === 'status-aberto' ? 'Aberto' : (flight.status === 'status-atencao' ? 'Atenção' : 'Finalizado');
-                const badgeClass = flight.status.replace('status-', '');
-                
+                const config = getStatusConfig(flight.status);
                 const card = document.createElement('div');
                 card.className = `card ${flight.status}`;
                 card.onclick = (e) => { if(!e.target.closest('button')) window.openFlight(flight.id); };
@@ -357,7 +422,7 @@
                 card.innerHTML = `
                     <div class="card-header">
                         <div><div class="flight-code">${flight.code}</div><div class="flight-route">${flight.route}</div></div>
-                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        <span class="badge ${config.class}">${config.text}</span>
                     </div>
                     <div class="card-actions">
                         <button class="btn-action" style="background:transparent; color:#ef4444; flex:0;" onclick="deleteFlight('${flight.id}')">🗑️</button>
@@ -375,21 +440,38 @@
             fab.style.display = screenId === 'view-service' ? 'none' : 'grid';
         };
 
+        window.switchFlightTab = (tabName) => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Ativar aba clicada
+            const btnIndex = tabName === 'services' ? 0 : 1;
+            document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            // Controlar FAB
+            const fab = document.getElementById('fab');
+            if (tabName === 'comments') fab.style.display = 'none';
+            else fab.style.display = 'grid';
+        };
+
         window.openFlight = (id) => {
             currentFlightId = id;
             const flight = localFlights.find(f => f.id === id);
             if(!flight) return;
 
-            document.getElementById('flight-title').innerText = flight.code;
-            const badge = document.getElementById('flight-status-badge');
-            badge.className = `badge ${flight.status.replace('status-', '')}`;
-            badge.innerText = flight.status === 'status-aberto' ? 'Aberto' : (flight.status === 'status-atencao' ? 'Atenção' : 'Finalizado');
+            // Resetar para a aba de serviços ao abrir
+            window.switchFlightTab('services');
             
-            renderServiceList(flight);
+            renderFlightDetails(flight);
             navTo('view-flight');
         };
 
-        window.renderServiceList = (flight) => {
+        window.renderFlightDetails = (flight) => {
+            document.getElementById('flight-title').innerText = flight.code;
+            document.getElementById('status-selector').value = flight.status;
+            
+            // Render Serviços
             const list = document.getElementById('service-list');
             const emptyMsg = document.getElementById('empty-msg');
             list.innerHTML = '';
@@ -414,9 +496,52 @@
                     list.appendChild(div);
                 });
             }
+
+            // Render Comentários
+            const commentsList = document.getElementById('comments-list');
+            commentsList.innerHTML = '';
+            const comments = flight.comments || [];
+            
+            if(comments.length === 0) {
+                commentsList.innerHTML = '<p style="text-align:center; color:var(--text-secondary); margin-top:20px;">Nenhum comentário.</p>';
+            } else {
+                comments.forEach(c => {
+                    const date = new Date(c.timestamp);
+                    const timeStr = `${date.getDate()}/${date.getMonth()+1} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    const div = document.createElement('div');
+                    div.className = 'comment-box';
+                    div.innerHTML = `
+                        <div class="comment-header">
+                            <span class="comment-user">${c.user.split('@')[0]}</span>
+                            <span class="comment-time">${timeStr}</span>
+                        </div>
+                        <div class="comment-text">${c.text}</div>
+                    `;
+                    commentsList.appendChild(div);
+                });
+            }
         };
 
-        // --- CHECKLISTS TEMPLATES ---
+        window.addComment = async () => {
+            const input = document.getElementById('input-comment');
+            const text = input.value.trim();
+            if(!text) return;
+
+            const flightRef = doc(db, "voos", currentFlightId);
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const currentComments = flight.comments || [];
+
+            const newComment = {
+                text: text,
+                user: currentUserEmail,
+                timestamp: Date.now()
+            };
+
+            await updateDoc(flightRef, { comments: [...currentComments, newComment] });
+            input.value = '';
+        };
+
+        // --- CHECKLISTS TEMPLATES (Mantidos iguais) ---
         const SERVICE_TEMPLATES = {
             "PETC": {
                 name: "Pet na Cabine",
@@ -632,6 +757,12 @@
 
         // --- AÇÕES DE BANCO DE DADOS (WRITE) ---
 
+        window.alterarStatusVoo = async (novoStatus) => {
+            if(!currentFlightId) return;
+            const flightRef = doc(db, "voos", currentFlightId);
+            await updateDoc(flightRef, { status: novoStatus });
+        };
+
         window.addFlight = async () => {
             const code = document.getElementById('new-flight-code').value;
             const route = document.getElementById('new-flight-route').value;
@@ -639,7 +770,7 @@
 
             // Salva no Firestore
             await addDoc(collection(db, "voos"), {
-                code, route, status: "status-aberto", services: [], createdAt: Date.now()
+                code, route, status: "status-aberto", services: [], comments: [], createdAt: Date.now()
             });
             
             closeModals();
@@ -692,7 +823,6 @@
             }
         };
 
-        // UI Helpers
         window.handleFabClick = () => {
             if(document.getElementById('view-dashboard').classList.contains('active')) {
                 document.getElementById('modal-flight').style.display = 'flex';
