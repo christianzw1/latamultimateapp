@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlightOps Manager - Cloud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* TEMA ESCURO (Dark Mode) */
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --bg-modal: #1e293b;
+            
+            --text-main: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155; 
+
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --danger: #ef4444;
+            --success: #22c55e;
+
+            /* Status Colors */
+            --status-aberto-bg: rgba(34, 197, 94, 0.15);
+            --status-aberto-text: #4ade80;
+            --status-atencao-bg: rgba(250, 204, 21, 0.15);
+            --status-atencao-text: #facc15;
+            --status-finalizado-bg: rgba(248, 113, 113, 0.15);
+            --status-finalizado-text: #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding-bottom: 80px; }
+
+        /* --- TELA DE LOGIN --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-body); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: var(--bg-card); padding: 40px; border-radius: 16px;
+            width: 90%; max-width: 400px; border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .login-logo { font-size: 3rem; margin-bottom: 20px; }
+        .hidden { display: none !important; }
+
+        /* --- NAVEGAÇÃO E TELAS --- */
+        .screen { display: none; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CABEÇALHOS */
+        header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 15px;
+        }
+        
+        .btn-back {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 1.5rem; cursor: pointer; padding: 5px;
+        }
+        .btn-back:hover { color: white; }
+
+        h1 { font-size: 1.5rem; color: var(--text-main); flex: 1; }
+        h2 { font-size: 1.2rem; color: white; margin-bottom: 10px; }
+
+        /* --- CARDS DE VOO (DASHBOARD) --- */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid transparent;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .card:active { transform: scale(0.98); }
+        .card.status-aberto { border-left-color: #4ade80; }
+        .card.status-finalizado { border-left-color: #f87171; }
+        .card.status-atencao { border-left-color: #facc15; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .flight-code { font-size: 1.4rem; font-weight: 700; color: #fff; }
+        .flight-route { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
+
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .badge.aberto { background: var(--status-aberto-bg); color: var(--status-aberto-text); }
+        .badge.finalizado { background: var(--status-finalizado-bg); color: var(--status-finalizado-text); }
+        .badge.atencao { background: var(--status-atencao-bg); color: var(--status-atencao-text); }
+
+        .card-actions { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; }
+        .btn-action { flex: 1; padding: 10px; border: none; background: var(--bg-hover); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: var(--primary); }
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        /* --- LISTAS E CHECKLISTS --- */
+        .service-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-hover); padding: 15px; border-radius: 12px;
+            margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border-color);
+        }
+        .service-type { font-weight: 800; font-size: 1.2rem; color: var(--primary); margin-right: 10px; }
+        .service-pax { color: white; font-weight: 600; }
+        .service-seat { color: var(--text-secondary); font-size: 0.9rem; }
+        .service-check { font-size: 0.8rem; color: var(--success); }
+
+        .checklist-group { margin-bottom: 30px; }
+        .group-title { color: var(--primary); font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .check-item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; }
+        
+        .custom-checkbox { appearance: none; width: 24px; height: 24px; border: 2px solid var(--text-secondary); border-radius: 6px; cursor: pointer; display: grid; place-content: center; flex-shrink: 0; margin-top: 2px; }
+        .custom-checkbox::before { content: ""; width: 12px; height: 12px; transform: scale(0); background-color: white; transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); transition: 120ms transform ease-in-out; }
+        .custom-checkbox:checked { background-color: var(--success); border-color: var(--success); }
+        .custom-checkbox:checked::before { transform: scale(1); }
+        .check-text { font-size: 0.95rem; color: #e2e8f0; line-height: 1.5; }
+
+        /* --- MODAIS E FAB --- */
+        .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; font-size: 2rem; border: none; box-shadow: 0 0 15px var(--primary-dark); cursor: pointer; display: grid; place-items: center; z-index: 100; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 200; display: none; align-items: center; justify-content: center; }
+        .modal-box { background: var(--bg-modal); width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .form-input, .form-select { width: 100%; padding: 12px; background: var(--bg-body); border: 1px solid var(--border-color); color: white; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; }
+        
+        .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-top: 20px; display: none; }
+        .info-box.visible { display: block; }
+        .info-title { color: var(--primary); font-weight: bold; margin-bottom: 5px; }
+        .info-content { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; white-space: pre-line; }
+        
+        #user-info { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; }
+        .logout-link { color: var(--danger); text-decoration: underline; cursor: pointer; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <div class="login-logo">✈️</div>
+            <h2>FlightOps Manager</h2>
+            <p style="color:var(--text-secondary); margin-bottom:20px;">Acesso Restrito à Equipe</p>
+            
+            <input type="email" id="login-email" class="form-input" placeholder="Seu e-mail corporativo">
+            <input type="password" id="login-pass" class="form-input" placeholder="Sua senha">
+            
+            <button class="btn-action btn-primary" onclick="fazerLogin()">Entrar no Sistema</button>
+            <p id="login-msg" style="color:var(--danger); margin-top:10px; font-size:0.9rem;"></p>
+        </div>
+    </div>
+
+    <div id="app-container" class="container hidden">
+        
+        <div id="view-dashboard" class="screen active">
+            <header>
+                <h1>✈️ Operações Solo</h1>
+                <div id="user-info">Carregando...</div>
+            </header>
+            <div id="flight-list">Carregando voos...</div>
+        </div>
+
+        <div id="view-flight" class="screen">
+            <header>
+                <button class="btn-back" onclick="navTo('view-dashboard')">←</button>
+                <h1 id="flight-title">Voo</h1>
+                <span id="flight-status-badge" class="badge"></span>
+            </header>
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 1rem; color: var(--text-secondary);">SERVIÇOS NO VOO</h2>
+                <div id="service-list"></div>
+            </div>
+            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-top: 40px;" id="empty-msg">Nenhum serviço especial.</div>
+        </div>
+
+        <div id="view-service" class="screen">
+            <header>
+                <button class="btn-back" onclick="navTo('view-flight')">←</button>
+                <div>
+                    <h1 id="service-header-type" style="color:var(--primary)">TYPE</h1>
+                    <div id="service-header-detail" style="font-size: 0.9rem; color: white;">Pax</div>
+                </div>
+            </header>
+            <div id="checklist-container"></div> 
+            <button class="btn-action" style="width:100%; background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 20px;" onclick="toggleInfo()">ℹ️ Saiba Mais / Regras</button>
+            <div id="service-info-box" class="info-box">
+                <div class="info-title">Regras e Procedimentos</div>
+                <div id="service-rules-content" class="info-content"></div>
+            </div>
+            <br><br>
+            <button class="btn-action" style="width:100%; background: rgba(239,68,68,0.2); color: #f87171;" onclick="deletarServicoAtual()">Remover Serviço</button>
+        </div>
+
+        <button id="fab" class="fab" onclick="handleFabClick()">+</button>
+        
+        <div id="modal-flight" class="modal-overlay">
+            <div class="modal-box">
+                <h2>Novo Voo</h2>
+                <input id="new-flight-code" class="form-input" placeholder="Nº Voo (Ex: LA 3255)">
+                <input id="new-flight-route" class="form-input" placeholder="Rota (Ex: GRU-SSA)">
+                <div style="display:flex; justify-content: flex-end; gap:10px;">
+                    <button class="btn-action" onclick="closeModals()">Cancelar</button>
+                    <button class="btn-action btn-primary" onclick="addFlight()">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-service" class="modal-overlay">
+            <div class="modal-box">
+                <h2>Adicionar Serviço</h2>
+                <select id="new-service-type" class="form-select">
+                    <option value="PETC">PETC (Pet na Cabine)</option>
+                    <option value="UMNR">UMNR (Menor Desacompanhado)</option>
+                    <option value="AVIH">AVIH (Animal no Porão)</option>
+                    <option value="MAAS">MAAS (Assistência)</option>
+                </select>
+                <input id="new-service-pax" class="form-input" placeholder="Nome do Passageiro">
+                <input id="new-service-seat" class="form-input" placeholder="Assento (Ex: 15C)">
+                <div style="display:flex; justify-content: flex-end; gap:10px;">
+                    <button class="btn-action" onclick="closeModals()">Cancelar</button>
+                    <button class="btn-action btn-primary" onclick="addService()">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        // SUA CONFIGURAÇÃO OFICIAL
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUDhMZmRNx2msn9SM4Nw5nA3OSRm-hkI0",
+            authDomain: "flightops-app.firebaseapp.com",
+            projectId: "flightops-app",
+            storageBucket: "flightops-app.firebasestorage.app",
+            messagingSenderId: "670439671056",
+            appId: "1:670439671056:web:5fb610571eaf4d19c9d195",
+            measurementId: "G-6082JH911G"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- SISTEMA DE LOGIN & WHITELIST ---
+        window.fazerLogin = async () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const msg = document.getElementById('login-msg');
+            
+            if(!email || !pass) { msg.innerText = "Preencha tudo."; return; }
+            msg.innerText = "Verificando...";
+
+            try {
+                // 1. Tenta logar
+                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                const user = userCredential.user;
+
+                // 2. Verifica Whitelist no Firestore
+                const whitelistRef = doc(db, "whitelist", user.email);
+                const docSnap = await getDoc(whitelistRef);
+
+                if (docSnap.exists()) {
+                    // Sucesso total
+                    msg.innerText = "";
+                } else {
+                    // Login existe, mas não está na lista VIP
+                    throw new Error("Usuário não autorizado pelo administrador.");
+                }
+            } catch (error) {
+                msg.innerText = "Erro: " + error.message;
+                signOut(auth); // Desloga se falhar na whitelist
+            }
+        };
+
+        window.sair = () => signOut(auth);
+
+        // Monitorar Auth
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Verificar whitelist novamente (segurança extra)
+                const whitelistRef = doc(db, "whitelist", user.email);
+                const docSnap = await getDoc(whitelistRef);
+                
+                if(docSnap.exists()) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    document.getElementById('user-info').innerHTML = `
+                        ${user.email.split('@')[0]} <span class="logout-link" onclick="sair()">(Sair)</span>
+                    `;
+                    iniciarAppEmTempoReal(); // Inicia o download dos dados
+                } else {
+                    signOut(auth);
+                }
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
+        });
+
+
+        // --- LÓGICA DO APP (MIGRADO PARA FIRESTORE) ---
+        
+        let localFlights = []; // Cache local dos dados vindos do banco
+        let currentFlightId = null;
+        let currentServiceIndex = null;
+
+        // Listener Real-Time (O coração do app)
+        function iniciarAppEmTempoReal() {
+            const q = query(collection(db, "voos"), orderBy("createdAt", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                localFlights = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                renderDashboard();
+                // Se estiver dentro de um voo, atualiza ele também
+                if(currentFlightId) {
+                    const updatedFlight = localFlights.find(f => f.id === currentFlightId);
+                    if(updatedFlight) renderServiceList(updatedFlight);
+                }
+            });
+        }
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO (UI) ---
+
+        window.renderDashboard = () => {
+            const list = document.getElementById('flight-list');
+            list.innerHTML = '';
+            
+            localFlights.forEach(flight => {
+                const badgeText = flight.status === 'status-aberto' ? 'Aberto' : (flight.status === 'status-atencao' ? 'Atenção' : 'Finalizado');
+                const badgeClass = flight.status.replace('status-', '');
+                
+                const card = document.createElement('div');
+                card.className = `card ${flight.status}`;
+                card.onclick = (e) => { if(!e.target.closest('button')) window.openFlight(flight.id); };
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div><div class="flight-code">${flight.code}</div><div class="flight-route">${flight.route}</div></div>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-action" style="background:transparent; color:#ef4444; flex:0;" onclick="deleteFlight('${flight.id}')">🗑️</button>
+                        <button class="btn-action btn-primary" onclick="openFlight('${flight.id}')">Detalhes</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        };
+
+        window.navTo = (screenId) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            const fab = document.getElementById('fab');
+            fab.style.display = screenId === 'view-service' ? 'none' : 'grid';
+        };
+
+        window.openFlight = (id) => {
+            currentFlightId = id;
+            const flight = localFlights.find(f => f.id === id);
+            if(!flight) return;
+
+            document.getElementById('flight-title').innerText = flight.code;
+            const badge = document.getElementById('flight-status-badge');
+            badge.className = `badge ${flight.status.replace('status-', '')}`;
+            badge.innerText = flight.status === 'status-aberto' ? 'Aberto' : (flight.status === 'status-atencao' ? 'Atenção' : 'Finalizado');
+            
+            renderServiceList(flight);
+            navTo('view-flight');
+        };
+
+        window.renderServiceList = (flight) => {
+            const list = document.getElementById('service-list');
+            const emptyMsg = document.getElementById('empty-msg');
+            list.innerHTML = '';
+            const services = flight.services || [];
+
+            if (services.length === 0) {
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+                services.forEach((service, index) => {
+                    const checkedCount = Object.values(service.checks || {}).filter(Boolean).length;
+                    const div = document.createElement('div');
+                    div.className = 'service-item';
+                    div.onclick = () => window.openService(index);
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center;">
+                            <span class="service-type">${service.type}</span>
+                            <div><div class="service-pax">${service.paxName}</div><div class="service-seat">Assento ${service.seat}</div></div>
+                        </div>
+                        <div class="service-check">${checkedCount} ok</div>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+        };
+
+        // --- CHECKLISTS TEMPLATES ---
+        const SERVICE_TEMPLATES = {
+            "PETC": {
+                name: "Pet na Cabine",
+                rules: "• Espécie: Cão ou Gato (>16 semanas).\n• Proibido: Menor Desacompanhado, Fileira 1, Saída de Emergência.\n• Kennel Rígido: 36x33x19cm | Flexível: 40x28x25cm.\n• Animal deve ficar totalmente dentro do kennel durante todo o voo.",
+                groups: [
+                    {
+                        title: "1. Triagem Inicial e Elegibilidade",
+                        items: [
+                            "<strong>Espécie e Idade:</strong> Confirmar se é apenas cão ou gato com, no mínimo, 16 semanas de vida.",
+                            "<strong>Restrição de Passageiro:</strong> Garantir que o passageiro não é um Menor Desacompanhado (UMNR).",
+                            "<strong>Compatibilidade:</strong> Verificar se o passageiro não possui berço (BSCT), oxigênio (PPOC), cão de serviço (SVAN) ou suporte emocional (ESAN), pois estes são incompatíveis.",
+                            "<strong>Limite por Cabine:</strong> Validar se não excede o máximo de 6 animais por voo (1 na Premium Economy e 5 na Economy)."
+                        ]
+                    },
+                    {
+                        title: "2. Documentação e Requisitos",
+                        items: [
+                            "<strong>Certificado Veterinário:</strong> Validar documento original e cópia, emitido há no máximo 10 dias antes do voo (nome, idade, raça, vacinas).",
+                            "<strong>Vacina Antirrábica (Brasil):</strong> Válida. Se for a primeira dose, deve ter sido aplicada há pelo menos 21 dias.",
+                            "<strong>TIMATIC:</strong> Consultar requisitos específicos do destino/conexão (ex: CDC para EUA, Aruba, Noronha)."
+                        ]
+                    },
+                    {
+                        title: "3. Inspeção do Kennel",
+                        items: [
+                            "<strong>Dimensões Máximas:</strong><br>• Rígido: 36x33x19 cm<br>• Flexível: 40x28x25 cm",
+                            "<strong>Conforto Animal:</strong> Confirmar que o animal consegue ficar em pé e se mover naturalmente sem tocar no teto/paredes.",
+                            "<strong>Segurança e Higiene:</strong> O kennel deve ter base impermeável, ventilação e trava que impeça a saída.",
+                            "<strong>Proibição de Rodas:</strong> Negar embarque se o kennel possuir rodas."
+                        ]
+                    },
+                    {
+                        title: "4. Procedimentos e Taxas",
+                        items: [
+                            "<strong>SSR PETC:</strong> Inserir/verificar dados no sistema: tipo, peso (animal+kennel), raça, idade, tipo kennel e medidas.",
+                            "<strong>Check-list IATA:</strong> Preencher obrigatoriamente o Check-list PETC (digital ou impresso).",
+                            "<strong>Pagamento:</strong> Confirmar se a taxa foi paga (EMD, CUV ou MSR) ou encaminhar para a loja.",
+                            "<strong>Alocação de Assento:</strong><br>• <span style='color:#ef4444'>Proibido:</span> 1ª fileira e saídas de emergência.<br>• <span style='color:#4ade80'>Recomendado:</span> C, D, J ou H (para encaixe sob assento)."
+                        ]
+                    },
+                    {
+                        title: "5. Instruções Finais",
+                        items: [
+                            "<strong>Custódia a Bordo:</strong> Informar que o animal deve permanecer totalmente dentro do kennel fechado do embarque ao desembarque.",
+                            "<strong>Proibição de Alimentação:</strong> Notificar que o animal não pode ser alimentado a bordo.",
+                            "<strong>Briefing de Embarque:</strong> Informar ao Chefe de Cabine sobre a presença do animal."
+                        ]
+                    }
+                ]
+            },
+            
+            "UMNR": {
+                name: "Menor Desacompanhado",
+                rules: "• Idade: 8 a 11 (Obrigatório) | 12 a 17 (Opcional).\n• Voo: Direto para <11 anos. Conexão só 12-17 em voos <4h.\n• Proibido: Viajar com PETC/AVIH.\n• Assento: Corredor. (Economy: Penúltima/Antepenúltima fileira).",
+                groups: [
+                    {
+                        title: "1. Pré-atendimento & Elegibilidade",
+                        items: [
+                            "<strong>Verificar Idade:</strong> Obrigatório (8 a 11 anos); Opcional (12 a 17 anos).",
+                            "<strong>Status da Reserva:</strong> Confirmar se o serviço está com status HK ou KK e se foi solicitado com 48h de antecedência.",
+                            "<strong>Autonomia do Menor:</strong> Confirmar se compreende segurança, locomove-se sozinho e atende necessidades básicas.",
+                            "<strong>Restrições de Itinerário:</strong> Validar se voo é direto para < 11 anos (conexões apenas 12-17 anos em voos < 4h).",
+                            "<strong>Proibições:</strong> Garantir que não viaja com animais (PETC/AVIH) ou necessita de medicamentos administrados."
+                        ]
+                    },
+                    {
+                        title: "2. Check-in & Documentação",
+                        items: [
+                            "<strong>Presença do Responsável:</strong> O menor deve estar obrigatoriamente com um adulto.",
+                            "<strong>Documentação:</strong> Conferir RG, Certidão de Nascimento ou Passaporte.",
+                            "<strong>Autorização de Viagem:</strong> Judicial, consular ou cartório. Se AEV, validar QR Code no app.",
+                            "<strong>Formulário UMNR:</strong> Preencher todas as vias (Original: Pai | Cópias: Origem, Chefe Cabine, Destino).",
+                            "<strong>Pagamento:</strong> Verificar se a taxa foi paga ou encaminhar à loja.",
+                            "<strong>Etiquetagem:</strong> Colocar etiquetas 'Menor Desacompanhado' na bagagem de mão e despachada.",
+                            "<strong>Protocolo Verbal:</strong> Informar ao responsável que deve permanecer até a decolagem."
+                        ]
+                    },
+                    {
+                        title: "3. Custódia & Embarque",
+                        items: [
+                            "<strong>Child Tracker:</strong> Colocar pulseira e ler código 2D no app (se aplicável).",
+                            "<strong>Envelope UM:</strong> Guardar todos os documentos e via do formulário no envelope.",
+                            "<strong>Acompanhamento:</strong> Agente assume o menor (max 3 menores por agente).",
+                            "<strong>Prioridade:</strong> Embarcar o menor antes dos demais.",
+                            "<strong>Assento Correto:</strong><br>• Economy: Corredor na penúltima ou antepenúltima (proibido emergência).<br>• Business: Corredor, preferencialmente 3 primeiras."
+                        ]
+                    }
+                ]
+            },
+
+            "AVIH": {
+                name: "Animal no Porão",
+                rules: "• Restrição Calor (BR): 10h01 às 15h59.\n• Kennel: Rígido, porta metálica trava dupla, sem rodas.\n• Obrigatório: 2 potes na porta, lacres, 5cm folga teto.\n• Documentos: 2 cópias atestado (<10 dias).",
+                groups: [
+                    {
+                        title: "1. Triagem Inicial e Elegibilidade",
+                        items: [
+                            "<strong>Reserva Confirmada:</strong> Verificar status HK/KK (min 48h antecedência).",
+                            "<strong>Espécie e Idade:</strong> Cão ou gato, min 16 semanas.",
+                            "<strong>Raças Proibidas:</strong> Não pode ser braquicefálico ou perigoso.",
+                            "<strong>Restrições Climáticas:</strong><br>• Brasil: Restrito 10h01-15h59 (Calor).<br>• Intl: Verificar embargos (ex: JFK/BOS Inverno).",
+                            "<strong>UMNR:</strong> Passageiro NÃO pode ser menor desacompanhado."
+                        ]
+                    },
+                    {
+                        title: "2. Documentação e Requisitos",
+                        items: [
+                            "<strong>Certificado Veterinário:</strong> 2 cópias (1 para arquivo), emitido <10 dias.",
+                            "<strong>Vacina Antirrábica:</strong> Válida (>21 dias se 1ª dose).",
+                            "<strong>TIMATIC:</strong> Consultar regras do destino (ex: CDC EUA)."
+                        ]
+                    },
+                    {
+                        title: "3. Inspeção do Kennel",
+                        items: [
+                            "<strong>Material:</strong> Plástico duro/fibra, porta metálica com trava dupla.",
+                            "<strong>Características:</strong> Teto sólido, base impermeável, alças.",
+                            "<strong>Rodas:</strong> Proibido (devem ser removidas).",
+                            "<strong>Acessórios:</strong> 2 recipientes fixados à porta (acesso externo).",
+                            "<strong>Itens Proibidos:</strong> Sem coleiras, roupas ou brinquedos dentro."
+                        ]
+                    },
+                    {
+                        title: "4. Conforto e Segurança",
+                        items: [
+                            "<strong>Espaço Interno:</strong> Animal fica em pé, gira e deita naturalmente.",
+                            "<strong>Folga do Teto:</strong> Min 5cm entre cabeça/orelhas e o teto.",
+                            "<strong>Lacres:</strong> Instalar 2 a 6 lacres na porta."
+                        ]
+                    },
+                    {
+                        title: "5. Sistema e Identificação",
+                        items: [
+                            "<strong>Pesagem:</strong> Total (Animal+Kennel) < 32kg ou 45kg.",
+                            "<strong>Registro:</strong> Inserir peso e qtd exatos no sistema.",
+                            "<strong>Etiquetas:</strong> 'Live Animal' preenchida + Setas 'This Way Up'.",
+                            "<strong>Pet Tracker (BR):</strong> Pulseira branca no kennel + Check-in App Siga Mobile."
+                        ]
+                    },
+                    {
+                        title: "6. Finalização e Rampa",
+                        items: [
+                            "<strong>NOTOC:</strong> Preparar notificação ao comandante.",
+                            "<strong>Documentação:</strong> Anexar envelope (NOTOC + Originais) ao kennel.",
+                            "<strong>Handover:</strong> Entregar à rampa para transporte seguro."
+                        ]
+                    }
+                ]
+            },
+
+            "MAAS": {
+                name: "Assistência Especial (MAAS)",
+                rules: "• Público: Idosos (≥60), Gestantes, Mãe+Bebê, Autonomia Limitada.\n• Assentos gratuitos (Seat Selection/Atributos).\n• NÃO é custódia integral (é apenas facilitação).\n• Não requer reserva prévia.",
+                groups: [
+                    {
+                        title: "1. Triagem e Elegibilidade",
+                        items: [
+                            "<strong>Verificar Público-alvo:</strong> Idoso (≥ 60 anos), gestante, mãe com bebê de colo ou autonomia limitada (ex: muletas).",
+                            "<strong>Seleção de Assento:</strong> Garantir acesso gratuito aos produtos Seat Selection e Assentos com Atributos.",
+                            "<strong>Esclarecimento sobre Custódia:</strong> Informar que a assistência facilita os processos, mas não é custódia integral."
+                        ]
+                    },
+                    {
+                        title: "2. Processo de Check-in",
+                        items: [
+                            "<strong>Ativação no Sistema:</strong> Identificar código MAAS na reserva ou inserir manualmente (não requer reserva prévia).",
+                            "<strong>Etiquetagem:</strong> Identificar obrigatoriamente a bagagem com a etiqueta PNAE / Assistência Especial.",
+                            "<strong>Acompanhamento Inicial:</strong> Conduzir desde o balcão, passando obrigatoriamente pelo Raio-X e fronteira."
+                        ]
+                    },
+                    {
+                        title: "3. Embarque e Permanência",
+                        items: [
+                            "<strong>Acesso Prioritário:</strong> Encaminhar o passageiro através do acesso 'Prioridade por Lei'.",
+                            "<strong>Condução à Aeronave:</strong> Acompanhar o passageiro até a porta da aeronave."
+                        ]
+                    }
+                ]
+            }
+        };
+
+        window.openService = (index) => {
+            currentServiceIndex = index;
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const service = flight.services[index];
+            const template = SERVICE_TEMPLATES[service.type];
+
+            document.getElementById('service-header-type').innerText = template.name;
+            document.getElementById('service-header-detail').innerText = `${service.paxName} • ${service.seat}`;
+            document.getElementById('service-rules-content').innerText = template.rules;
+            document.getElementById('service-info-box').classList.remove('visible');
+
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+
+            let globalIdx = 0;
+            template.groups.forEach(group => {
+                let html = `<div class="checklist-group"><div class="group-title">${group.title}</div>`;
+                group.items.forEach(itemText => {
+                    const isChecked = service.checks && service.checks[globalIdx] ? 'checked' : '';
+                    html += `
+                        <label class="check-item">
+                            <input type="checkbox" class="custom-checkbox" ${isChecked} onchange="updateCheck(${globalIdx}, this.checked)">
+                            <div class="check-text">${itemText}</div>
+                        </label>`;
+                    globalIdx++;
+                });
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+            navTo('view-service');
+        };
+
+        // --- AÇÕES DE BANCO DE DADOS (WRITE) ---
+
+        window.addFlight = async () => {
+            const code = document.getElementById('new-flight-code').value;
+            const route = document.getElementById('new-flight-route').value;
+            if(!code) return;
+
+            // Salva no Firestore
+            await addDoc(collection(db, "voos"), {
+                code, route, status: "status-aberto", services: [], createdAt: Date.now()
+            });
+            
+            closeModals();
+            document.getElementById('new-flight-code').value = '';
+            document.getElementById('new-flight-route').value = '';
+        };
+
+        window.deleteFlight = async (id) => {
+            if(confirm("Apagar voo?")) {
+                await deleteDoc(doc(db, "voos", id));
+            }
+        };
+
+        window.addService = async () => {
+            const type = document.getElementById('new-service-type').value;
+            const pax = document.getElementById('new-service-pax').value;
+            const seat = document.getElementById('new-service-seat').value;
+            if(!pax) return;
+
+            const flightRef = doc(db, "voos", currentFlightId);
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const newServices = [...flight.services, { type, paxName: pax, seat: seat || "S/A", checks: {} }];
+
+            await updateDoc(flightRef, { services: newServices });
+            
+            closeModals();
+            document.getElementById('new-service-pax').value = '';
+        };
+
+        window.updateCheck = async (idx, checked) => {
+            const flightRef = doc(db, "voos", currentFlightId);
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const services = [...flight.services];
+            
+            if(!services[currentServiceIndex].checks) services[currentServiceIndex].checks = {};
+            services[currentServiceIndex].checks[idx] = checked;
+
+            await updateDoc(flightRef, { services: services });
+        };
+
+        window.deletarServicoAtual = async () => {
+            if(confirm("Remover serviço?")) {
+                const flightRef = doc(db, "voos", currentFlightId);
+                const flight = localFlights.find(f => f.id === currentFlightId);
+                const services = [...flight.services];
+                services.splice(currentServiceIndex, 1);
+
+                await updateDoc(flightRef, { services: services });
+                navTo('view-flight');
+            }
+        };
+
+        // UI Helpers
+        window.handleFabClick = () => {
+            if(document.getElementById('view-dashboard').classList.contains('active')) {
+                document.getElementById('modal-flight').style.display = 'flex';
+            } else {
+                document.getElementById('modal-service').style.display = 'flex';
+            }
+        };
+        window.closeModals = () => document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        window.toggleInfo = () => document.getElementById('service-info-box').classList.toggle('visible');
+
+    </script>
+</body>
+</html>
