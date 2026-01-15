@@ -22,6 +22,7 @@
             --primary-dark: #2563eb;
             --danger: #ef4444;
             --success: #22c55e;
+            --warning: #f59e0b;
 
             /* Status Colors */
             --status-aberto-bg: rgba(34, 197, 94, 0.15);
@@ -135,15 +136,26 @@
         .btn-action { flex: 1; padding: 10px; border: none; background: var(--bg-hover); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-primary { background: var(--primary); }
         .btn-primary:hover { background: var(--primary-dark); }
+        .btn-role { background: var(--bg-card); border: 2px solid var(--border-color); margin-bottom: 10px; text-align: left; padding: 15px; transition: 0.2s; }
+        .btn-role:hover { border-color: var(--primary); background: var(--bg-hover); }
 
-        /* --- COMENTÁRIOS --- */
+        /* --- COMENTÁRIOS E ALERTAS --- */
         .comment-box {
             background: rgba(255,255,255,0.03);
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 15px;
             border: 1px solid var(--border-color);
+            position: relative;
         }
+        
+        /* Estilo para mensagens de Controller e Portão */
+        .comment-box.urgent {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            animation: pulse 2s infinite;
+        }
+
         .comment-header {
             display: flex;
             justify-content: space-between;
@@ -151,10 +163,46 @@
             font-size: 0.8rem;
         }
         .comment-user { color: var(--primary); font-weight: 700; }
+        
+        /* Cor diferente para usuário em msg urgente */
+        .comment-box.urgent .comment-user { color: #fca5a5; }
+        
+        .comment-role-badge {
+            font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; background: var(--bg-body); border: 1px solid var(--border-color);
+        }
+        .urgent .comment-role-badge { background: var(--danger); border: none; color: white; }
+
         .comment-time { color: var(--text-secondary); }
         .comment-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; }
         
         .input-group { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* --- POPUP DE ALERTA (INTERRUPÇÃO) --- */
+        #alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); 
+            z-index: 99999; /* Acima de tudo */
+            display: none;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        .alert-box {
+            background: #1e293b;
+            border: 2px solid var(--danger);
+            width: 90%; max-width: 450px;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        .alert-icon { font-size: 3rem; margin-bottom: 15px; }
+        .alert-title { color: var(--danger); font-size: 1.5rem; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; }
+        .alert-message { font-size: 1.1rem; color: white; line-height: 1.6; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; }
+        .alert-author { font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
         /* --- LISTAS E CHECKLISTS --- */
         .service-item {
@@ -208,6 +256,16 @@
         </div>
     </div>
 
+    <div id="alert-overlay">
+        <div class="alert-box">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-title">Atenção Operacional</div>
+            <div class="alert-author" id="alert-author-text"></div>
+            <div class="alert-message" id="alert-msg-text"></div>
+            <button class="btn-action btn-primary" onclick="fecharAlerta()">CIENTE</button>
+        </div>
+    </div>
+
     <div id="app-container" class="container hidden">
         
         <div id="view-dashboard" class="screen active">
@@ -231,9 +289,14 @@
                 </div>
             </header>
 
+            <div style="background: var(--bg-card); padding: 8px 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--text-secondary)">Sua função neste voo:</span>
+                <span id="current-role-display" style="font-weight: bold; color: white;">...</span>
+            </div>
+
             <div class="tab-container">
                 <button class="tab-btn active" onclick="switchFlightTab('services')">SERVIÇOS</button>
-                <button class="tab-btn" onclick="switchFlightTab('comments')">COMENTÁRIOS</button>
+                <button class="tab-btn" onclick="switchFlightTab('comments')">MURAL</button>
             </div>
 
             <div id="tab-services" class="tab-content active">
@@ -291,6 +354,15 @@
                     <option value="UMNR">UMNR (Menor Desacompanhado)</option>
                     <option value="AVIH">AVIH (Animal no Porão)</option>
                     <option value="MAAS">MAAS (Assistência)</option>
+                    <optgroup label="Cadeira de Rodas / Mobilidade">
+                        <option value="WCHR">WCHR (Ramp - Sobe escada)</option>
+                        <option value="WCHS">WCHS (Steps - Não sobe escada)</option>
+                        <option value="WCHC">WCHC (Cabin - Imóvel)</option>
+                        <option value="WCMP">WCMP (Manual Power)</option>
+                        <option value="WCBD">WCBD (Bateria Seca)</option>
+                        <option value="WCBW">WCBW (Bateria Úmida)</option>
+                        <option value="WCLB">WCLB (Bateria Lítio)</option>
+                    </optgroup>
                 </select>
                 <input id="new-service-pax" class="form-input" placeholder="Nome do Passageiro">
                 <input id="new-service-seat" class="form-input" placeholder="Assento (Ex: 15C)">
@@ -300,6 +372,31 @@
                 </div>
             </div>
         </div>
+
+        <div id="modal-role" class="modal-overlay" style="z-index: 300;">
+            <div class="modal-box">
+                <h2 style="text-align: center; margin-bottom: 20px;">Quem é você neste voo?</h2>
+                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 20px; font-size: 0.9rem;">Escolha sua função para acessar o painel.</p>
+                
+                <button class="btn-action btn-role" onclick="selectRole('Check-in')">
+                    <div style="font-weight: bold; color: white;">1. Check-in</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Agente de Aeroporto</div>
+                </button>
+
+                <button class="btn-action btn-role" onclick="selectRole('Controller')">
+                    <div style="font-weight: bold; color: #f87171;">2. Controller</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Controle de Voo / Dispatch (Alertas Vermelhos)</div>
+                </button>
+
+                <button class="btn-action btn-role" onclick="selectRole('Portão')">
+                    <div style="font-weight: bold; color: #f87171;">3. Portão</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Líder de Embarque (Alertas Vermelhos)</div>
+                </button>
+
+                <button class="btn-action" style="margin-top: 10px; width: 100%;" onclick="closeModals()">Cancelar</button>
+            </div>
+        </div>
+
     </div>
 
     <script type="module">
@@ -322,6 +419,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         let currentUserEmail = "";
+        
+        // Variáveis de Estado da Sessão
+        let currentRole = ""; // 'Check-in', 'Controller', 'Portão'
+        let pendingFlightId = null; // ID do voo esperando seleção de cargo
 
         // --- LOGIN & WHITELIST ---
         window.fazerLogin = async () => {
@@ -379,6 +480,7 @@
         let localFlights = [];
         let currentFlightId = null;
         let currentServiceIndex = null;
+        let lastCommentCount = 0; // Para rastrear mensagens novas e disparar popup
 
         function iniciarAppEmTempoReal() {
             const q = query(collection(db, "voos"), orderBy("createdAt", "desc"));
@@ -397,6 +499,21 @@
                 }
             });
         }
+
+        // --- SELEÇÃO DE FUNÇÃO ---
+        window.startOpenFlight = (id) => {
+            pendingFlightId = id;
+            // Abre o modal de escolha de função
+            document.getElementById('modal-role').style.display = 'flex';
+        };
+
+        window.selectRole = (role) => {
+            currentRole = role;
+            document.getElementById('modal-role').style.display = 'none';
+            if(pendingFlightId) {
+                window.openFlight(pendingFlightId);
+            }
+        };
 
         // --- RENDERIZAÇÃO ---
 
@@ -417,7 +534,7 @@
                 const config = getStatusConfig(flight.status);
                 const card = document.createElement('div');
                 card.className = `card ${flight.status}`;
-                card.onclick = (e) => { if(!e.target.closest('button')) window.openFlight(flight.id); };
+                card.onclick = (e) => { if(!e.target.closest('button')) window.startOpenFlight(flight.id); };
                 
                 card.innerHTML = `
                     <div class="card-header">
@@ -426,7 +543,7 @@
                     </div>
                     <div class="card-actions">
                         <button class="btn-action" style="background:transparent; color:#ef4444; flex:0;" onclick="deleteFlight('${flight.id}')">🗑️</button>
-                        <button class="btn-action btn-primary" onclick="openFlight('${flight.id}')">Detalhes</button>
+                        <button class="btn-action btn-primary" onclick="startOpenFlight('${flight.id}')">Detalhes</button>
                     </div>
                 `;
                 list.appendChild(card);
@@ -459,6 +576,12 @@
             currentFlightId = id;
             const flight = localFlights.find(f => f.id === id);
             if(!flight) return;
+
+            // Resetar tracker de comentários para não apitar mensagens antigas
+            lastCommentCount = (flight.comments || []).length;
+            
+            // Exibir a função atual
+            document.getElementById('current-role-display').innerText = currentRole;
 
             // Resetar para a aba de serviços ao abrir
             window.switchFlightTab('services');
@@ -497,29 +620,72 @@
                 });
             }
 
-            // Render Comentários
+            // Render Comentários & Lógica de Popup
             const commentsList = document.getElementById('comments-list');
             commentsList.innerHTML = '';
             const comments = flight.comments || [];
             
+            // --- LÓGICA DO POP-UP DE INTERRUPÇÃO ---
+            if (comments.length > lastCommentCount) {
+                const latestComment = comments[comments.length - 1];
+                // Se a mensagem é nova, é de um cargo de poder e NÃO FUI EU quem mandou
+                const isPowerRole = latestComment.role === 'Controller' || latestComment.role === 'Portão';
+                const isNotMe = latestComment.user !== currentUserEmail;
+
+                if (isPowerRole && isNotMe) {
+                    mostrarAlerta(latestComment.role, latestComment.text, latestComment.user);
+                }
+            }
+            lastCommentCount = comments.length; // Atualiza contador
+            // ---------------------------------------
+
             if(comments.length === 0) {
-                commentsList.innerHTML = '<p style="text-align:center; color:var(--text-secondary); margin-top:20px;">Nenhum comentário.</p>';
+                commentsList.innerHTML = '<p style="text-align:center; color:var(--text-secondary); margin-top:20px;">Nenhum aviso no mural.</p>';
             } else {
                 comments.forEach(c => {
                     const date = new Date(c.timestamp);
                     const timeStr = `${date.getDate()}/${date.getMonth()+1} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    
+                    // Verifica se é mensagem urgente
+                    const isUrgent = c.role === 'Controller' || c.role === 'Portão';
+                    const urgentClass = isUrgent ? 'urgent' : '';
+                    
                     const div = document.createElement('div');
-                    div.className = 'comment-box';
+                    div.className = `comment-box ${urgentClass}`;
                     div.innerHTML = `
                         <div class="comment-header">
-                            <span class="comment-user">${c.user.split('@')[0]}</span>
+                            <span class="comment-user">
+                                ${c.user.split('@')[0]} 
+                                <span class="comment-role-badge">${c.role || 'Geral'}</span>
+                            </span>
                             <span class="comment-time">${timeStr}</span>
                         </div>
                         <div class="comment-text">${c.text}</div>
                     `;
                     commentsList.appendChild(div);
                 });
+                // Auto scroll para o final
+                commentsList.scrollTop = commentsList.scrollHeight;
             }
+        };
+
+        // --- FUNÇÕES DO POP-UP ---
+        window.mostrarAlerta = (role, text, userEmail) => {
+            const overlay = document.getElementById('alert-overlay');
+            const authorText = document.getElementById('alert-author-text');
+            const msgText = document.getElementById('alert-msg-text');
+            
+            authorText.innerHTML = `Mensagem de <strong>${role}</strong> (${userEmail.split('@')[0]})`;
+            msgText.innerText = text;
+            
+            overlay.style.display = 'flex';
+            
+            // Som de alerta (opcional, vibração em mobile)
+            if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        };
+
+        window.fecharAlerta = () => {
+            document.getElementById('alert-overlay').style.display = 'none';
         };
 
         window.addComment = async () => {
@@ -534,6 +700,7 @@
             const newComment = {
                 text: text,
                 user: currentUserEmail,
+                role: currentRole, // Salva o cargo junto com a mensagem
                 timestamp: Date.now()
             };
 
@@ -541,7 +708,31 @@
             input.value = '';
         };
 
-        // --- CHECKLISTS TEMPLATES (Mantidos iguais) ---
+        // --- TEMPLATES DE CHECKLISTS (COMPLETO) ---
+        
+        const WHEELCHAIR_TEMPLATE_BASE = {
+            rules: "• WCHR: Passageiro sobe escadas, mas não caminha longas distâncias.",
+            groups: [
+                {
+                    title: "1. Check-in e Identificação",
+                    items: [
+                        "<strong>Validação do Código:</strong> Confirmar se o código está inserido corretamente na reserva e verificar informações no SSR CKIN2.",
+                        "<strong>Cartão de Embarque:</strong> Permitir que o passageiro utilize o Self Check-in Digital ou Kiosk, inclusive para a impressão.",
+                        "<strong>Etiquetagem de Bagagem:</strong> Identificar a bagagem com a etiqueta PNAE / Assistência Especial (Prioridade).",
+                        "<strong>Custo do Serviço:</strong> Garantir que a assistência seja prestada de forma gratuita."
+                    ]
+                },
+                {
+                    title: "2. Cadeira de Rodas Própria (se aplicável)",
+                    items: [
+                        "<strong>Uso até o Portão:</strong> Oferecer ao passageiro a opção de usar sua própria cadeira manual até a porta da aeronave.",
+                        "<strong>Etiquetagem:</strong> Colocar a etiqueta de Gate Dispatch (Despacho no Portão) na cadeira própria.",
+                        "<strong>Estado do Equipamento:</strong> Caso haja dano prévio na cadeira, solicitar a assinatura do Limited Release."
+                    ]
+                }
+            ]
+        };
+
         const SERVICE_TEMPLATES = {
             "PETC": {
                 name: "Pet na Cabine",
@@ -720,14 +911,265 @@
                         ]
                     }
                 ]
+            },
+
+            "WCHS": {
+                name: "Cadeira de Rodas (WCHS)",
+                rules: "• WCHS: Passageiro NÃO sobe escadas, mas caminha até o assento.\n• Cadeira Própria: Manual (Gate Dispatch) ou Motorizada (NOTOC + Bateria).\n• Assento: Proibido Saída de Emergência.\n• Prioridade: Primeira fileira (Regra Brasil).",
+                groups: [
+                    {
+                        title: "1. Recepção e Check-in",
+                        items: [
+                             "<strong>Validação do SSR:</strong> Garantir que o código WCHS esteja inserido. Se tiver cadeira própria, combinar com WCMP (manual) ou WCBW/WCBD (bateria).",
+                             "<strong>Emissão de Cartão:</strong> Autorizado a emitir via Web, App ou Kiosk.",
+                             "<strong>Identificação de Bagagem:</strong> Colocar etiqueta PNAE / Assistência Especial em todos os volumes (Prioridade).",
+                             "<strong>Cadeira Própria (Manual):</strong> Oferecer uso até a porta do avião e colocar etiqueta de Portão (Gate Dispatch).",
+                             "<strong>Cadeira Própria (Motorizada):</strong> Preencher obrigatoriamente o NOTOC e coordenar a desconexão da bateria."
+                        ]
+                    },
+                    {
+                        title: "2. Alocação de Assentos",
+                        items: [
+                            "<strong>Segurança:</strong> <span style='color:#ef4444'>Proibir</span> terminantemente a acomodação em saídas de emergência.",
+                            "<strong>Localização:</strong> Priorizar assento no corredor e próximo às portas de saída.",
+                            "<strong>Regra Brasil:</strong> Acomodar preferencialmente na primeira fileira.",
+                            "<strong>Benefício:</strong> Garantir isenção de custo em produtos de seleção de assento."
+                        ]
+                    }
+                ]
+            },
+
+            "WCHC": {
+                name: "Cadeira de Rodas (WCHC)",
+                rules: "• Imóvel: Necessita auxílio integral (assento <-> aeronave).\n• Acompanhante: Não obrigatório se tiver autonomia de evacuação.\n• Cadeira Própria: Gate Dispatch (Manual) ou NOTOC (Motorizada).\n• Assento: Proibido Saída de Emergência. Preferência 1ª Fileira.",
+                groups: [
+                    {
+                        title: "1. Triagem e Autonomia",
+                        items: [
+                            "<strong>Identificar Necessidade:</strong> Confirmar que o passageiro necessita de cadeira para movimentação e auxílio para subir/descer escadas.",
+                            "<strong>Avaliar Acompanhante:</strong> O fato de não caminhar não obriga o uso de acompanhante, exceto se a imobilidade impedir deslocamento independente na evacuação.",
+                            "<strong>Custos:</strong> Garantir que o serviço de assistência e o transporte de dispositivos de mobilidade sejam gratuitos."
+                        ]
+                    },
+                    {
+                        title: "2. Check-in e Identificação",
+                        items: [
+                            "<strong>Emissão de Cartão:</strong> WCHC pode emitir via Web, App ou Kiosk (Brasil); Internacional pode haver restrição.",
+                            "<strong>Códigos no Sistema:</strong> Garantir WCHC. Se tiver cadeira própria, combinar com código técnico (WCMP, WCBW, WCBD, WCLB).",
+                            "<strong>Etiquetagem de Bagagem:</strong> Identificar todas as malas com a etiqueta PNAE / Assistência Especial (Prioridade).",
+                            "<strong>Cadeira Própria (Manual):</strong> Oferecer uso até a porta, aplicando etiqueta Gate Dispatch.",
+                            "<strong>Cadeira Própria (Motorizada):</strong> Preencher NOTOC, inserir peso (padrão 50kg) e avisar Rampa/Supervisor.",
+                            "<strong>Baterias:</strong> Coordenar a desconexão dos terminais da bateria."
+                        ]
+                    },
+                    {
+                        title: "3. Alocação de Assento",
+                        items: [
+                            "<strong>Proibição:</strong> Garantir que o passageiro <span style='color:#ef4444'>não seja alocado</span> em saídas de emergência.",
+                            "<strong>Localização:</strong> Priorizar assento no corredor e próximo às portas de saída.",
+                            "<strong>Regra Brasil:</strong> Acomodar preferencialmente na primeira fileira.",
+                            "<strong>Benefício:</strong> Garantir acesso gratuito à seleção de assentos e assentos com atributos."
+                        ]
+                    }
+                ]
+            },
+
+            "WCMP": {
+                name: "Cadeira Manual Própria (WCMP)",
+                rules: "• Código Técnico: Deve estar associado a WCHR, S ou C.\n• Peso Padrão: 15kg (se não houver peso real).\n• Avarias: Preencher Limited Release se houver dano prévio.\n• Rodas: Não é necessário desinflar.",
+                groups: [
+                    {
+                        title: "1. Check-in e Identificação do Equipamento",
+                        items: [
+                            "<strong>Emissão de Bilhete:</strong> O passageiro WCMP pode emitir seu cartão de embarque via Web, App ou Kiosk.",
+                            "<strong>Combinação de Códigos:</strong> Garantir que o código WCMP esteja associado a um código de mobilidade (WCHR, WCHS ou WCHC).",
+                            "<strong>Peso no Sistema:</strong> Inserir peso real ou, se não for possível, utilizar padrão de 15 kg.",
+                            "<strong>Uso das Rodas:</strong> Informar que as rodas podem embarcar normalmente (sem desinflar).",
+                            "<strong>Etiquetagem:</strong> Identificar cadeira com Gate Dispatch e demais bagagens com PNAE / Assistência Especial."
+                        ]
+                    },
+                    {
+                        title: "2. Verificação de Avarias",
+                        items: [
+                            "<strong>Inspeção Prévia:</strong> Verificar se a cadeira já possui danos ou avarias.",
+                            "<strong>Termo de Responsabilidade:</strong> Caso haja danos prévios, solicitar <span style='color:#ef4444'>obrigatoriamente</span> a assinatura do documento Limited Release."
+                        ]
+                    },
+                    {
+                        title: "3. Alocação de Assento",
+                        items: [
+                            "<strong>Segurança:</strong> Garantir que o passageiro não esteja em saídas de emergência.",
+                            "<strong>Localização:</strong> Priorizar assento no corredor e próximo às portas de saída.",
+                            "<strong>Regra Brasil:</strong> Acomodar preferencialmente na primeira fileira.",
+                            "<strong>Benefício:</strong> Garantir acesso gratuito aos produtos de seleção de assento."
+                        ]
+                    },
+                    {
+                        title: "4. Embarque e Fluxo no Portão",
+                        items: [
+                            "<strong>Opção de Uso:</strong> Oferecer ao passageiro a alternativa de utilizar sua própria cadeira manual até a porta da aeronave.",
+                            "<strong>Prioridade:</strong> Realizar o embarque através do acesso exclusivo para necessidades especiais."
+                        ]
+                    }
+                ]
+            },
+
+            "WCBD": {
+                name: "Cadeira c/ Bateria Seca (WCBD)",
+                rules: "• Antecedência: +1 hora extra no check-in.\n• Bateria: Seca ou Gel (Selada). Não Derramável.\n• Transporte: Vertical. Bateria permanece fixada.\n• NOTOC: Obrigatório (Artigo Perigoso).",
+                groups: [
+                    {
+                        title: "1. Triagem e Apresentação",
+                        items: [
+                            "<strong>Tempo de Antecedência:</strong> Garantir que o passageiro se apresentou com 1 hora de antecedência adicional ao tempo regular (2h doméstico / 3h internacional).",
+                            "<strong>Tipo de Bateria:</strong> Confirmar que a bateria é seca ou de gel (selada/não derramável)."
+                        ]
+                    },
+                    {
+                        title: "2. Check-in e Identificação",
+                        items: [
+                            "<strong>Emissão de Cartão:</strong> No Brasil pode usar Kiosk/App. Internacional: Apenas balcão.",
+                            "<strong>SSR no Sistema:</strong> Validar a combinação do código WCBD com o nível de assistência (WCHR/S/C).",
+                            "<strong>Peso do Equipamento:</strong> Inserir o peso real. Se não for possível pesar, utilizar padrão de 50 kg.",
+                            "<strong>Comentário (CM):</strong> Inserir: “PSGR COM PESO DE MOBILIDADE REDUZIDO OK NO SISTEMA, BT [nº da etiqueta]”.",
+                            "<strong>Etiquetagem:</strong> PNAE/Assistência Especial em tudo. Se usar até a porta, colocar Gate Dispatch."
+                        ]
+                    },
+                    {
+                        title: "3. Procedimentos de Segurança e NOTOC",
+                        items: [
+                            "<strong>Preenchimento de NOTOC:</strong> Preencher obrigatoriamente o formulário NOTOC para artigos perigosos.",
+                            "<strong>Comunicação Interna:</strong> Avisar o Supervisor, a equipe de rampa (EOP/COT) e a Central DOV sobre o transporte."
+                        ]
+                    },
+                    {
+                        title: "4. Preparação Técnica da Cadeira",
+                        items: [
+                            "<strong>Desconexão e Isolamento:</strong> Desconectar os terminais da bateria e isolá-los para evitar curto-circuito (Equipe LATAM ou Pax).",
+                            "<strong>Acomodação:</strong> A bateria seca/gel deve permanecer fixada à cadeira e transportada na vertical.",
+                            "<strong>Avarias:</strong> Se houver dano prévio, solicitar assinatura do Limited Release."
+                        ]
+                    },
+                    {
+                        title: "5. Alocação e Embarque",
+                        items: [
+                            "<strong>Assento:</strong> Proibir saídas de emergência. Brasil: Priorizar 1ª fileira. Outros: Corredor próximo às portas.",
+                            "<strong>Manejo de Carga:</strong> Carregamento via Ambulift ou catering. <span style='color:#ef4444'>Proibido</span> escadas de serviço.",
+                            "<strong>Prioridade:</strong> Pré-embarque pelo acesso de necessidades especiais."
+                        ]
+                    }
+                ]
+            },
+
+            "WCBW": {
+                name: "Cadeira c/ Bateria Úmida (WCBW)",
+                rules: "• Antecedência: +1 hora extra no check-in.\n• Bateria: Derramável / Líquida.\n• Transporte: OBRIGATORIAMENTE Vertical.\n• Bateria: NUNCA deve ser removida da cadeira.",
+                groups: [
+                    {
+                        title: "1. Triagem e Apresentação",
+                        items: [
+                            "<strong>Antecedência Adicional:</strong> Garantir 1h extra check-in (2h doméstico / 3h internacional).",
+                            "<strong>Confirmação da Bateria:</strong> Validar que é derramável/líquida.",
+                            "<strong>Inspeção de Integridade:</strong> Verificar vazamentos. Se houver vazamento, o transporte <span style='color:#ef4444'>não poderá ser realizado</span>."
+                        ]
+                    },
+                    {
+                        title: "2. Check-in e Registros em Sistema",
+                        items: [
+                            "<strong>Cartão de Embarque:</strong> Brasil: Kiosk/App. Outros: Balcão.",
+                            "<strong>Códigos de SSR:</strong> Validar código WCBW combinado com assistência (WCHR/S/C).",
+                            "<strong>Peso e Comentário:</strong> Peso real (ou 50kg padrão). Inserir CM: “PSGR COM PESO DE MOBILIDADE REDUZIDO OK NO SISTEMA, BT [nº da etiqueta]”.",
+                            "<strong>Etiquetagem:</strong> PNAE em tudo. Gate Dispatch se for até a porta."
+                        ]
+                    },
+                    {
+                        title: "3. Preparação Técnica (Bateria Derramável)",
+                        items: [
+                            "<strong>Desconexão e Isolamento:</strong> Desconectar cabos e isolar terminais (Pax ou Equipe LATAM).",
+                            "<strong>Não Remoção:</strong> A bateria derramável <span style='color:#ef4444'>nunca</span> deve ser removida da cadeira.",
+                            "<strong>Posição Vertical:</strong> Garantir que a cadeira permaneça na posição vertical em todas as etapas.",
+                            "<strong>Ferramentas:</strong> Se usar ferramentas da LATAM, despachá-las na bagagem após o uso."
+                        ]
+                    },
+                    {
+                        title: "4. Segurança e Embarque",
+                        items: [
+                            "<strong>NOTOC:</strong> Preencher obrigatoriamente e entregar ao Comandante/Rampa.",
+                            "<strong>Manejo de Carga:</strong> Carregamento via Ambulift/Catering. Proibido escadas de serviço.",
+                            "<strong>Assento:</strong> Proibido saída de emergência. Priorizar 1ª fileira (Brasil).",
+                            "<strong>Avarias:</strong> Solicitar Limited Release se houver dano prévio."
+                        ]
+                    }
+                ]
+            },
+
+            "WCLB": {
+                name: "Cadeira c/ Bateria Lítio (WCLB)",
+                rules: "• Antecedência: +1 hora extra no check-in.\n• Instalada: Sem limite Wh.\n• Removida (Cabine): Max 1x300Wh ou 2x160Wh.\n• Cálculo: Voltagem (V) x Ampere-hora (Ah).",
+                groups: [
+                    {
+                        title: "1. Triagem e Apresentação",
+                        items: [
+                            "<strong>Antecedência:</strong> Validar 1h extra check-in (2h doméstico / 3h internacional).",
+                            "<strong>Emissão de Cartão:</strong> Brasil: Kiosk/App/Web. Outros: Balcão."
+                        ]
+                    },
+                    {
+                        title: "2. Análise Técnica da Bateria (Lítio)",
+                        items: [
+                            "<strong>Removibilidade:</strong> Verificar se a bateria pode ou não ser removida.",
+                            "<strong>Baterias Instaladas (Fixas):</strong> Não há limite de Wh.",
+                            "<strong>Baterias Removíveis (Cabine):</strong> Se removida, não pode exceder: 1 bateria até 300 Wh OU 2 baterias até 160 Wh cada.",
+                            "<strong>Cálculo de Potência:</strong> Se não houver Wh na etiqueta, calcular: Voltagem (V) x Ampere-hora (Ah)."
+                        ]
+                    },
+                    {
+                        title: "3. Check-in e Registros em Sistema",
+                        items: [
+                            "<strong>Peso e Comentário:</strong> Peso real (ou 50kg padrão). Inserir CM: “PSGR COM PESO DE MOBILIDADE REDUZIDO OK NO SISTEMA, BT [nº da etiqueta]”.",
+                            "<strong>Etiquetagem:</strong> PNAE em tudo. Gate Dispatch se for até a porta.",
+                            "<strong>Avarias:</strong> Solicitar Limited Release se houver dano prévio."
+                        ]
+                    },
+                    {
+                        title: "4. Procedimentos de Segurança e NOTOC",
+                        items: [
+                            "<strong>NOTOC:</strong> Preencher obrigatoriamente (especificar tipo e se foi removida).",
+                            "<strong>Comunicação:</strong> Avisar Supervisor, Rampa e DOV.",
+                            "<strong>Preparação:</strong> Terminais desconectados e isolados. Se removida, bateria vai na cabine com o Pax."
+                        ]
+                    },
+                    {
+                        title: "5. Embarque e Manejo",
+                        items: [
+                            "<strong>Alocação:</strong> Proibir saída de emergência. Priorizar 1ª fileira (Brasil).",
+                            "<strong>Posicionamento:</strong> Transporte sempre na vertical.",
+                            "<strong>Manejo de Carga:</strong> Carregamento via Ambulift/Catering. Proibido escadas de serviço."
+                        ]
+                    }
+                ]
             }
         };
+
+        // Adiciona WCHR (e garante que funcione)
+        const wheelchairCodes = ["WCHR"];
+        wheelchairCodes.forEach(code => {
+            SERVICE_TEMPLATES[code] = {
+                ...WHEELCHAIR_TEMPLATE_BASE,
+                name: `Cadeira de Rodas (${code})`
+            };
+        });
 
         window.openService = (index) => {
             currentServiceIndex = index;
             const flight = localFlights.find(f => f.id === currentFlightId);
             const service = flight.services[index];
             const template = SERVICE_TEMPLATES[service.type];
+
+            if(!template) {
+                alert("Erro: Template não encontrado para " + service.type);
+                return;
+            }
 
             document.getElementById('service-header-type').innerText = template.name;
             document.getElementById('service-header-detail').innerText = `${service.paxName} • ${service.seat}`;
@@ -768,7 +1210,6 @@
             const route = document.getElementById('new-flight-route').value;
             if(!code) return;
 
-            // Salva no Firestore
             await addDoc(collection(db, "voos"), {
                 code, route, status: "status-aberto", services: [], comments: [], createdAt: Date.now()
             });
