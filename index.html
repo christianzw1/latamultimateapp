@@ -23,6 +23,7 @@
             --danger: #ef4444;
             --success: #22c55e;
             --warning: #f59e0b;
+            --sig-color: #d946ef; /* Cor Magente para SIG */
 
             /* Status Colors */
             --status-aberto-bg: rgba(34, 197, 94, 0.15);
@@ -43,7 +44,7 @@
             min-height: 100vh;
         }
 
-        .container { max-width: 800px; margin: 0 auto; padding-bottom: 80px; }
+        .container { max-width: 1100px; margin: 0 auto; padding-bottom: 80px; }
 
         /* --- TELA DE LOGIN --- */
         #login-screen {
@@ -84,118 +85,106 @@
         h1 { font-size: 1.5rem; color: var(--text-main); flex: 1; }
         h2 { font-size: 1.2rem; color: white; margin-bottom: 10px; }
 
+        /* --- LAYOUTS DE GRID (VOO E SERVIÇO) --- */
+        .flight-layout { display: grid; gap: 20px; alignItems: start; grid-template-columns: 280px 1fr; }
+        .service-layout { display: grid; gap: 20px; alignItems: start; grid-template-columns: 1fr 300px; }
+
+        /* Painel de Tarefas (Voo) */
+        .task-panel {
+            background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 15px; height: fit-content; position: sticky; top: 20px;
+        }
+        
+        /* Painel Lateral de Serviço (Status) */
+        .service-sidebar { display: flex; flex-direction: column; gap: 15px; position: sticky; top: 20px; }
+        .status-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+        .status-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+
+        .btn-status {
+            padding: 15px; border-radius: 8px; border: 2px solid var(--border-color);
+            background: var(--bg-body); color: var(--text-secondary); font-weight: 600;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-status:hover { background: var(--bg-hover); }
+        .btn-status.active-standby { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); color: var(--warning); }
+        .btn-status.active-lounge { background: rgba(34, 197, 94, 0.15); border-color: var(--success); color: var(--success); }
+        .btn-status.active-delivered { background: rgba(34, 197, 94, 0.15); border-color: var(--success); color: var(--success); }
+        
+        /* TAREFAS ESTILOS */
+        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
+        .task-list { display: flex; flex-direction: column; gap: 10px; }
+        .task-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; position: relative; transition: all 0.2s; }
+        .task-item.priority-high { border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .task-item.priority-normal { border-left: 4px solid var(--text-secondary); }
+        .task-item.done { opacity: 0.5; text-decoration: line-through; }
+        .task-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+        .task-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .tag-urgent { background: var(--danger); color: white; }
+        .tag-routine { background: var(--bg-hover); color: var(--text-secondary); }
+        .task-check { width: 20px; height: 20px; cursor: pointer; border-radius: 50%; border: 2px solid var(--text-secondary); display: grid; place-items: center; flex-shrink: 0; }
+        .task-check.checked { background: var(--success); border-color: var(--success); }
+        .task-check.checked::after { content: "✓"; color: white; font-size: 0.8rem; }
+
         /* --- ABAS (TABS) --- */
-        .tab-container {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: none;
-            border: none;
-            padding: 12px;
-            color: var(--text-secondary);
-            font-weight: 600;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-        }
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
+        .tab-container { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
+        .tab-btn { flex: 1; background: none; border: none; padding: 12px; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         /* --- CARDS DE VOO (DASHBOARD) --- */
-        .card {
-            background-color: var(--bg-card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid transparent;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            position: relative;
-        }
+        .card { background-color: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 15px; border-left: 4px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
         .card:active { transform: scale(0.98); }
-        
         .card.status-aberto { border-left-color: #4ade80; }
         .card.status-finalizado { border-left-color: #f87171; }
         .card.status-checkin { border-left-color: #fb923c; }
-
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .flight-code { font-size: 1.4rem; font-weight: 700; color: #fff; }
         .flight-route { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
-
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .badge.aberto { background: var(--status-aberto-bg); color: var(--status-aberto-text); }
         .badge.finalizado { background: var(--status-finalizado-bg); color: var(--status-finalizado-text); }
         .badge.checkin { background: var(--status-checkin-bg); color: var(--status-checkin-text); }
-
         .card-actions { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; }
         .btn-action { flex: 1; padding: 10px; border: none; background: var(--bg-hover); color: white; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-primary { background: var(--primary); }
         .btn-primary:hover { background: var(--primary-dark); }
         .btn-role { background: var(--bg-card); border: 2px solid var(--border-color); margin-bottom: 10px; text-align: left; padding: 15px; transition: 0.2s; }
         .btn-role:hover { border-color: var(--primary); background: var(--bg-hover); }
+        .btn-sm { padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; }
+
+        /* --- ESTILOS DESEMBARQUE (ARRIVAL) --- */
+        .arrival-header-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(30, 41, 59, 0.5));
+            border: 1px solid var(--primary);
+            padding: 20px; border-radius: 12px; margin-bottom: 20px;
+            text-align: center;
+        }
+        .arrival-create-btn { width: 100%; padding: 30px; border: 2px dashed var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-secondary); cursor: pointer; border-radius: 12px; font-size: 1.1rem; }
+        .arrival-create-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+
+        .arrival-item {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .arrival-item.is-sig { border-left: 4px solid var(--sig-color); background: rgba(217, 70, 239, 0.05); }
+        .sig-badge { background: var(--sig-color); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
 
         /* --- COMENTÁRIOS E ALERTAS --- */
-        .comment-box {
-            background: rgba(255,255,255,0.03);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-            position: relative;
-        }
-        
-        /* Estilo para mensagens de Controller e Portão */
-        .comment-box.urgent {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid var(--danger);
-            animation: pulse 2s infinite;
-        }
-
-        .comment-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.8rem;
-        }
+        .comment-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); position: relative; }
+        .comment-box.urgent { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); animation: pulse 2s infinite; }
+        .comment-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; }
         .comment-user { color: var(--primary); font-weight: 700; }
-        
-        /* Cor diferente para usuário em msg urgente */
-        .comment-box.urgent .comment-user { color: #fca5a5; }
-        
-        .comment-role-badge {
-            font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; background: var(--bg-body); border: 1px solid var(--border-color);
-        }
+        .urgent .comment-user { color: #fca5a5; }
+        .comment-role-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; background: var(--bg-body); border: 1px solid var(--border-color); }
         .urgent .comment-role-badge { background: var(--danger); border: none; color: white; }
-
         .comment-time { color: var(--text-secondary); }
         .comment-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; }
-        
         .input-group { display: flex; gap: 10px; margin-top: 20px; }
 
-        /* --- POPUP DE ALERTA (INTERRUPÇÃO) --- */
-        #alert-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); 
-            z-index: 99999; /* Acima de tudo */
-            display: none;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(8px);
-        }
-        .alert-box {
-            background: #1e293b;
-            border: 2px solid var(--danger);
-            width: 90%; max-width: 450px;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
+        /* --- POPUP DE ALERTA --- */
+        #alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .alert-box { background: #1e293b; border: 2px solid var(--danger); width: 90%; max-width: 450px; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(239, 68, 68, 0.4); animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         .alert-icon { font-size: 3rem; margin-bottom: 15px; }
         .alert-title { color: var(--danger); font-size: 1.5rem; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; }
         .alert-message { font-size: 1.1rem; color: white; line-height: 1.6; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; }
@@ -205,15 +194,12 @@
         @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
         /* --- LISTAS E CHECKLISTS --- */
-        .service-item {
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--bg-hover); padding: 15px; border-radius: 12px;
-            margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border-color);
-        }
+        .service-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border-color); }
         .service-type { font-weight: 800; font-size: 1.2rem; color: var(--primary); margin-right: 10px; }
         .service-pax { color: white; font-weight: 600; }
         .service-seat { color: var(--text-secondary); font-size: 0.9rem; }
         .service-check { font-size: 0.8rem; color: var(--success); }
+        .service-status-pill { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; font-weight: bold; }
 
         .checklist-group { margin-bottom: 30px; }
         .group-title { color: var(--primary); font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
@@ -231,13 +217,21 @@
         .modal-box { background: var(--bg-modal); width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; border: 1px solid var(--border-color); }
         .form-input, .form-select { width: 100%; padding: 12px; background: var(--bg-body); border: 1px solid var(--border-color); color: white; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; }
         
-        .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-top: 20px; display: none; }
+        .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-top: 10px; display: none; }
         .info-box.visible { display: block; }
         .info-title { color: var(--primary); font-weight: bold; margin-bottom: 5px; }
         .info-content { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; white-space: pre-line; }
         
         #user-info { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; }
         .logout-link { color: var(--danger); text-decoration: underline; cursor: pointer; margin-left: 10px; }
+
+        /* --- RESPONSIVIDADE MOBILE --- */
+        @media (max-width: 768px) {
+            .flight-layout { grid-template-columns: 1fr; }
+            .task-panel { margin-bottom: 20px; order: -1; position: relative; top: 0; }
+            .service-layout { grid-template-columns: 1fr; }
+            .service-sidebar { order: -1; margin-bottom: 20px; position: relative; top: 0; }
+        }
     </style>
 </head>
 <body>
@@ -294,23 +288,41 @@
                 <span id="current-role-display" style="font-weight: bold; color: white;">...</span>
             </div>
 
-            <div class="tab-container">
-                <button class="tab-btn active" onclick="switchFlightTab('services')">SERVIÇOS</button>
-                <button class="tab-btn" onclick="switchFlightTab('comments')">MURAL</button>
-            </div>
-
-            <div id="tab-services" class="tab-content active">
-                <div id="service-list"></div>
-                <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-top: 40px;" id="empty-msg">Nenhum serviço especial.</div>
-            </div>
-
-            <div id="tab-comments" class="tab-content">
-                <div id="comments-list" style="margin-bottom: 20px;"></div>
+            <div class="flight-layout">
                 
-                <div class="input-group">
-                    <input id="input-comment" class="form-input" style="margin-bottom:0;" placeholder="Digite um comentário ou aviso...">
-                    <button class="btn-action btn-primary" style="flex:0 0 60px;" onclick="addComment()">➤</button>
-                </div>
+                <aside class="task-panel">
+                    <div class="task-header">
+                        <span>Tarefas do Voo</span>
+                        <button class="btn-action btn-primary btn-sm" onclick="openTaskModal()">+ Nova</button>
+                    </div>
+                    <div id="task-list-container" class="task-list">
+                    </div>
+                </aside>
+
+                <main>
+                    <div class="tab-container">
+                        <button class="tab-btn active" onclick="switchFlightTab('services')">SERVIÇOS</button>
+                        <button class="tab-btn" onclick="switchFlightTab('arrival')">DESEMBARQUE</button>
+                        <button class="tab-btn" onclick="switchFlightTab('comments')">MURAL</button>
+                    </div>
+        
+                    <div id="tab-services" class="tab-content active">
+                        <div id="service-list"></div>
+                        <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-top: 40px;" id="empty-msg">Nenhum serviço especial.</div>
+                    </div>
+
+                    <div id="tab-arrival" class="tab-content">
+                        <div id="arrival-content-area"></div>
+                    </div>
+        
+                    <div id="tab-comments" class="tab-content">
+                        <div id="comments-list" style="margin-bottom: 20px;"></div>
+                        <div class="input-group">
+                            <input id="input-comment" class="form-input" style="margin-bottom:0;" placeholder="Digite um comentário ou aviso...">
+                            <button class="btn-action btn-primary" style="flex:0 0 60px;" onclick="addComment()">➤</button>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
 
@@ -322,26 +334,81 @@
                     <div id="service-header-detail" style="font-size: 0.9rem; color: white;">Pax</div>
                 </div>
             </header>
-            <div id="checklist-container"></div> 
-            <button class="btn-action" style="width:100%; background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 20px;" onclick="toggleInfo()">ℹ️ Saiba Mais / Regras</button>
-            <div id="service-info-box" class="info-box">
-                <div class="info-title">Regras e Procedimentos</div>
-                <div id="service-rules-content" class="info-content"></div>
+            
+            <div class="service-layout">
+                <div id="checklist-container"></div>
+                
+                <aside class="service-sidebar">
+                    <div id="status-panel" class="status-card" style="display: none;">
+                        <h3 style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase;">Status Atual</h3>
+                        <div id="status-controls" class="status-btn-group"></div>
+                    </div>
+
+                    <div>
+                        <button class="btn-action" style="width:100%; background: transparent; border: 1px solid var(--primary); color: var(--primary);" onclick="toggleInfo()">ℹ️ Ver Regras</button>
+                        <div id="service-info-box" class="info-box">
+                            <div class="info-title">Regras e Procedimentos</div>
+                            <div id="service-rules-content" class="info-content"></div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-action" style="width:100%; background: rgba(239,68,68,0.2); color: #f87171;" onclick="deletarServicoAtual()">Remover Serviço</button>
+                </aside>
             </div>
-            <br><br>
-            <button class="btn-action" style="width:100%; background: rgba(239,68,68,0.2); color: #f87171;" onclick="deletarServicoAtual()">Remover Serviço</button>
+
         </div>
 
         <button id="fab" class="fab" onclick="handleFabClick()">+</button>
         
         <div id="modal-flight" class="modal-overlay">
             <div class="modal-box">
-                <h2>Novo Voo</h2>
+                <h2>Novo Voo (Saída)</h2>
                 <input id="new-flight-code" class="form-input" placeholder="Nº Voo (Ex: LA 3255)">
                 <input id="new-flight-route" class="form-input" placeholder="Rota (Ex: GRU-SSA)">
                 <div style="display:flex; justify-content: flex-end; gap:10px;">
                     <button class="btn-action" onclick="closeModals()">Cancelar</button>
                     <button class="btn-action btn-primary" onclick="addFlight()">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-arrival-flight" class="modal-overlay">
+            <div class="modal-box">
+                <h2>Registrar Voo Chegada</h2>
+                <p style="color:var(--text-secondary); margin-bottom:15px; font-size:0.9rem;">Crie o voo de desembarque para iniciar.</p>
+                <input id="arr-flight-code" class="form-input" placeholder="Nº Voo Chegada (Ex: LA 3200)">
+                <input id="arr-flight-route" class="form-input" placeholder="Rota (Ex: GIG-GRU)">
+                <div style="display:flex; justify-content: flex-end; gap:10px;">
+                    <button class="btn-action" onclick="closeModals()">Cancelar</button>
+                    <button class="btn-action btn-primary" onclick="createArrivalFlight()">Criar Desembarque</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-arrival-item" class="modal-overlay">
+            <div class="modal-box">
+                <h2>Info de Bagagem</h2>
+                
+                <label style="font-size:0.9rem; color:var(--text-secondary);">Quantidade HVC:</label>
+                <input id="item-hvc-qty" type="number" class="form-input" placeholder="0">
+                
+                <div style="background: rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold;">Tem BAG SIG?</span>
+                        <input type="checkbox" id="check-has-sig" style="width:20px; height:20px;" onchange="toggleSigFields()">
+                    </div>
+                    
+                    <div id="sig-fields" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid var(--border-color);">
+                        <p style="color:var(--sig-color); font-size:0.8rem; margin-bottom:10px; font-weight:bold;">DETALHES SIG (Alta Prioridade)</p>
+                        <input id="item-sig-pax" class="form-input" placeholder="Nome do PAX">
+                        <input id="item-sig-seat" class="form-input" placeholder="Assento (Opcional)">
+                        <input id="item-sig-qty" type="number" class="form-input" placeholder="Qtd Bagagens SIG">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content: flex-end; gap:10px;">
+                    <button class="btn-action" onclick="closeModals()">Cancelar</button>
+                    <button class="btn-action btn-primary" onclick="addArrivalItem()">Adicionar Info</button>
                 </div>
             </div>
         </div>
@@ -369,6 +436,21 @@
                 <div style="display:flex; justify-content: flex-end; gap:10px;">
                     <button class="btn-action" onclick="closeModals()">Cancelar</button>
                     <button class="btn-action btn-primary" onclick="addService()">Adicionar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-task" class="modal-overlay">
+            <div class="modal-box">
+                <h2>Nova Tarefa</h2>
+                <input id="new-task-text" class="form-input" placeholder="Descrição da tarefa (Ex: Pegar Lacre na Rampa)">
+                <select id="new-task-priority" class="form-select">
+                    <option value="normal">🔵 Rotina</option>
+                    <option value="high">🔴 URGENTE / IMPORTANTE</option>
+                </select>
+                <div style="display:flex; justify-content: flex-end; gap:10px;">
+                    <button class="btn-action" onclick="closeModals()">Cancelar</button>
+                    <button class="btn-action btn-primary" onclick="addTask()">Criar Tarefa</button>
                 </div>
             </div>
         </div>
@@ -420,9 +502,9 @@
         const db = getFirestore(app);
         let currentUserEmail = "";
         
-        // Variáveis de Estado da Sessão
-        let currentRole = ""; // 'Check-in', 'Controller', 'Portão'
-        let pendingFlightId = null; // ID do voo esperando seleção de cargo
+        let currentRole = ""; 
+        let pendingFlightId = null;
+        let currentTab = 'services'; // Controle da aba ativa
 
         // --- LOGIN & WHITELIST ---
         window.fazerLogin = async () => {
@@ -480,7 +562,7 @@
         let localFlights = [];
         let currentFlightId = null;
         let currentServiceIndex = null;
-        let lastCommentCount = 0; // Para rastrear mensagens novas e disparar popup
+        let lastCommentCount = 0; 
 
         function iniciarAppEmTempoReal() {
             const q = query(collection(db, "voos"), orderBy("createdAt", "desc"));
@@ -494,16 +576,17 @@
                 if(currentFlightId) {
                     const updatedFlight = localFlights.find(f => f.id === currentFlightId);
                     if(updatedFlight) {
+                        if (document.getElementById('view-service').classList.contains('active')) {
+                            updateServiceViewUI(updatedFlight);
+                        }
                         renderFlightDetails(updatedFlight);
                     }
                 }
             });
         }
 
-        // --- SELEÇÃO DE FUNÇÃO ---
         window.startOpenFlight = (id) => {
             pendingFlightId = id;
-            // Abre o modal de escolha de função
             document.getElementById('modal-role').style.display = 'flex';
         };
 
@@ -553,23 +636,54 @@
         window.navTo = (screenId) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
-            const fab = document.getElementById('fab');
-            fab.style.display = screenId === 'view-service' ? 'none' : 'grid';
+            updateFabVisibility(screenId);
         };
 
+        function updateFabVisibility(screenId) {
+            const fab = document.getElementById('fab');
+            if(screenId === 'view-service') {
+                fab.style.display = 'none';
+            } else if (screenId === 'view-flight') {
+                // Lógica do FAB baseada na ABA atual
+                if(currentTab === 'services') {
+                    fab.style.display = 'grid';
+                    fab.onclick = () => { document.getElementById('modal-service').style.display = 'flex'; };
+                } else if(currentTab === 'arrival') {
+                    // FAB no Desembarque só aparece se o voo de chegada já foi criado
+                    const flight = localFlights.find(f => f.id === currentFlightId);
+                    if(flight && flight.arrival) {
+                        fab.style.display = 'grid';
+                        fab.onclick = () => { 
+                            document.getElementById('check-has-sig').checked = false;
+                            toggleSigFields(); // Resetar campos
+                            document.getElementById('modal-arrival-item').style.display = 'flex'; 
+                        };
+                    } else {
+                        fab.style.display = 'none'; // Se não tem voo criado, usa o botão grande
+                    }
+                } else {
+                    fab.style.display = 'none'; // Mural não tem FAB
+                }
+            } else {
+                // Dashboard
+                fab.style.display = 'grid';
+                fab.onclick = () => { document.getElementById('modal-flight').style.display = 'flex'; };
+            }
+        }
+
         window.switchFlightTab = (tabName) => {
+            currentTab = tabName;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
-            // Ativar aba clicada
-            const btnIndex = tabName === 'services' ? 0 : 1;
-            document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
+            // Ativa o botão correto (índices hardcoded: 0=Services, 1=Arrival, 2=Comments)
+            const btns = document.querySelectorAll('.tab-btn');
+            if(tabName === 'services') btns[0].classList.add('active');
+            if(tabName === 'arrival') btns[1].classList.add('active');
+            if(tabName === 'comments') btns[2].classList.add('active');
+
             document.getElementById(`tab-${tabName}`).classList.add('active');
-            
-            // Controlar FAB
-            const fab = document.getElementById('fab');
-            if (tabName === 'comments') fab.style.display = 'none';
-            else fab.style.display = 'grid';
+            updateFabVisibility('view-flight');
         };
 
         window.openFlight = (id) => {
@@ -577,15 +691,10 @@
             const flight = localFlights.find(f => f.id === id);
             if(!flight) return;
 
-            // Resetar tracker de comentários para não apitar mensagens antigas
             lastCommentCount = (flight.comments || []).length;
-            
-            // Exibir a função atual
             document.getElementById('current-role-display').innerText = currentRole;
 
-            // Resetar para a aba de serviços ao abrir
             window.switchFlightTab('services');
-            
             renderFlightDetails(flight);
             navTo('view-flight');
         };
@@ -594,7 +703,8 @@
             document.getElementById('flight-title').innerText = flight.code;
             document.getElementById('status-selector').value = flight.status;
             
-            // Render Serviços
+            renderTasks(flight.tasks || []);
+
             const list = document.getElementById('service-list');
             const emptyMsg = document.getElementById('empty-msg');
             list.innerHTML = '';
@@ -606,13 +716,22 @@
                 emptyMsg.style.display = 'none';
                 services.forEach((service, index) => {
                     const checkedCount = Object.values(service.checks || {}).filter(Boolean).length;
+                    
+                    let statusPill = '';
+                    if (service.stage === 'lounge') statusPill = '<span class="service-status-pill" style="background:rgba(34,197,94,0.2); color:#4ade80;">NA SALA</span>';
+                    else if (service.stage === 'ramp_delivered') statusPill = '<span class="service-status-pill" style="background:rgba(34,197,94,0.2); color:#4ade80;">NA TRIAGEM</span>';
+                    else if (service.stage === 'standby' && ['MAAS', 'UMNR'].includes(service.type)) statusPill = '<span class="service-status-pill" style="background:rgba(245,158,11,0.2); color:#fb923c;">STANDBY</span>';
+
                     const div = document.createElement('div');
                     div.className = 'service-item';
                     div.onclick = () => window.openService(index);
                     div.innerHTML = `
                         <div style="display:flex; align-items:center;">
                             <span class="service-type">${service.type}</span>
-                            <div><div class="service-pax">${service.paxName}</div><div class="service-seat">Assento ${service.seat}</div></div>
+                            <div>
+                                <div class="service-pax">${service.paxName} ${statusPill}</div>
+                                <div class="service-seat">Assento ${service.seat}</div>
+                            </div>
                         </div>
                         <div class="service-check">${checkedCount} ok</div>
                     `;
@@ -620,15 +739,15 @@
                 });
             }
 
-            // Render Comentários & Lógica de Popup
+            // RENDER DESEMBARQUE
+            renderArrivalTab(flight);
+
             const commentsList = document.getElementById('comments-list');
             commentsList.innerHTML = '';
             const comments = flight.comments || [];
             
-            // --- LÓGICA DO POP-UP DE INTERRUPÇÃO ---
             if (comments.length > lastCommentCount) {
                 const latestComment = comments[comments.length - 1];
-                // Se a mensagem é nova, é de um cargo de poder e NÃO FUI EU quem mandou
                 const isPowerRole = latestComment.role === 'Controller' || latestComment.role === 'Portão';
                 const isNotMe = latestComment.user !== currentUserEmail;
 
@@ -636,8 +755,7 @@
                     mostrarAlerta(latestComment.role, latestComment.text, latestComment.user);
                 }
             }
-            lastCommentCount = comments.length; // Atualiza contador
-            // ---------------------------------------
+            lastCommentCount = comments.length;
 
             if(comments.length === 0) {
                 commentsList.innerHTML = '<p style="text-align:center; color:var(--text-secondary); margin-top:20px;">Nenhum aviso no mural.</p>';
@@ -645,8 +763,6 @@
                 comments.forEach(c => {
                     const date = new Date(c.timestamp);
                     const timeStr = `${date.getDate()}/${date.getMonth()+1} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
-                    
-                    // Verifica se é mensagem urgente
                     const isUrgent = c.role === 'Controller' || c.role === 'Portão';
                     const urgentClass = isUrgent ? 'urgent' : '';
                     
@@ -664,52 +780,313 @@
                     `;
                     commentsList.appendChild(div);
                 });
-                // Auto scroll para o final
                 commentsList.scrollTop = commentsList.scrollHeight;
             }
         };
 
-        // --- FUNÇÕES DO POP-UP ---
+        // --- LÓGICA DE DESEMBARQUE ---
+        window.renderArrivalTab = (flight) => {
+            const container = document.getElementById('arrival-content-area');
+            container.innerHTML = '';
+
+            // Se não existe objeto 'arrival', mostrar botão de criação
+            if(!flight.arrival) {
+                container.innerHTML = `
+                    <button class="arrival-create-btn" onclick="document.getElementById('modal-arrival-flight').style.display='flex'">
+                        <div style="font-size:2rem; margin-bottom:10px;">🛬</div>
+                        <strong>Vincular Voo de Desembarque</strong>
+                        <div style="font-size:0.9rem; margin-top:5px;">Clique para configurar o voo de chegada</div>
+                    </button>
+                `;
+                return;
+            }
+
+            // Cabeçalho do Desembarque
+            container.innerHTML = `
+                <div class="arrival-header-card">
+                    <h2 style="margin:0; color:white;">${flight.arrival.code}</h2>
+                    <div style="color:var(--text-secondary); margin-top:5px;">Rota: ${flight.arrival.route}</div>
+                </div>
+            `;
+
+            // Lista de Itens (Bagagens/Infos)
+            const items = flight.arrivalItems || [];
+            if(items.length === 0) {
+                container.innerHTML += `<div style="text-align:center; color:var(--text-secondary); margin-top:20px;">Nenhuma informação de bagagem registrada.</div>`;
+            } else {
+                items.forEach((item, idx) => {
+                    const isSig = item.hasSig;
+                    let detailHtml = `<span style="color:var(--text-secondary);">HVC: <strong>${item.hvcQty || 0}</strong></span>`;
+                    
+                    if(isSig) {
+                        detailHtml = `
+                            <div><span class="sig-badge">SIG</span> <span style="font-weight:bold; color:var(--sig-color);">Pax: ${item.sigPax}</span></div>
+                            <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px;">
+                                Assento: ${item.sigSeat || 'N/A'} • Qtd SIG: <strong>${item.sigQty}</strong> • HVC: ${item.hvcQty}
+                            </div>
+                        `;
+                    } else {
+                         detailHtml += ` <span style="font-size:0.8rem; margin-left:10px; opacity:0.7;">(Sem SIG)</span>`;
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = `arrival-item ${isSig ? 'is-sig' : ''}`;
+                    div.innerHTML = `
+                        <div style="flex:1;">${detailHtml}</div>
+                        <button style="background:none; border:none; color:#ef4444; font-size:1.2rem; cursor:pointer;" onclick="deleteArrivalItem(${idx})">×</button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        };
+
+        window.createArrivalFlight = async () => {
+            const code = document.getElementById('arr-flight-code').value;
+            const route = document.getElementById('arr-flight-route').value;
+            if(!code) return alert("Digite o número do voo.");
+
+            await updateDoc(doc(db, "voos", currentFlightId), {
+                arrival: { code, route },
+                arrivalItems: []
+            });
+            closeModals();
+            updateFabVisibility('view-flight'); // Atualiza para mostrar o FAB de adicionar item
+        };
+
+        window.toggleSigFields = () => {
+            const isChecked = document.getElementById('check-has-sig').checked;
+            document.getElementById('sig-fields').style.display = isChecked ? 'block' : 'none';
+        };
+
+        window.addArrivalItem = async () => {
+            const hvcQty = document.getElementById('item-hvc-qty').value;
+            const hasSig = document.getElementById('check-has-sig').checked;
+            
+            let itemData = {
+                hvcQty: hvcQty,
+                hasSig: hasSig,
+                createdAt: Date.now()
+            };
+
+            if(hasSig) {
+                const pax = document.getElementById('item-sig-pax').value;
+                const seat = document.getElementById('item-sig-seat').value;
+                const sigQty = document.getElementById('item-sig-qty').value;
+                
+                if(!pax) return alert("Para SIG, o nome do PAX é obrigatório.");
+                
+                itemData.sigPax = pax;
+                itemData.sigSeat = seat;
+                itemData.sigQty = sigQty;
+            }
+
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const currentItems = flight.arrivalItems || [];
+            
+            await updateDoc(doc(db, "voos", currentFlightId), {
+                arrivalItems: [...currentItems, itemData]
+            });
+            
+            // Limpar campos
+            document.getElementById('item-hvc-qty').value = '';
+            document.getElementById('item-sig-pax').value = '';
+            document.getElementById('item-sig-seat').value = '';
+            document.getElementById('item-sig-qty').value = '';
+            document.getElementById('check-has-sig').checked = false;
+            toggleSigFields();
+            closeModals();
+        };
+
+        window.deleteArrivalItem = async (idx) => {
+            if(!confirm("Remover esta informação?")) return;
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const items = [...flight.arrivalItems];
+            items.splice(idx, 1);
+            await updateDoc(doc(db, "voos", currentFlightId), { arrivalItems: items });
+        };
+
+
+        window.renderTasks = (tasks) => {
+            const container = document.getElementById('task-list-container');
+            container.innerHTML = '';
+            if (tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-size: 0.8rem; padding: 10px;">Nenhuma tarefa pendente.</div>';
+                return;
+            }
+            const sortedTasks = [...tasks].sort((a, b) => {
+                if (a.priority === 'high' && b.priority !== 'high') return -1;
+                if (a.priority !== 'high' && b.priority === 'high') return 1;
+                if (a.done === b.done) return 0;
+                return a.done ? 1 : -1;
+            });
+
+            sortedTasks.forEach((task) => {
+                const isHigh = task.priority === 'high';
+                const item = document.createElement('div');
+                item.className = `task-item priority-${task.priority} ${task.done ? 'done' : ''}`;
+                const badge = isHigh ? `<span class="task-tag tag-urgent">⚠️ URGENTE</span>` : `<span class="task-tag tag-routine">Rotina</span>`;
+                item.innerHTML = `
+                    <div class="task-top">
+                        ${badge}
+                        <button style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;" onclick="deleteTask(${task.id})">✕</button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="task-check ${task.done ? 'checked' : ''}" onclick="toggleTask(${task.id})"></div>
+                        <div style="font-size:0.9rem; color:white; line-height:1.4;">${task.text}</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        };
+
+        // --- FUNÇÕES DE STATUS DO SERVIÇO ---
+
+        window.openService = (index) => {
+            currentServiceIndex = index;
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            updateServiceViewUI(flight); 
+            navTo('view-service');
+        };
+
+        function updateServiceViewUI(flight) {
+            if (!flight.services || !flight.services[currentServiceIndex]) {
+                navTo('view-flight');
+                return;
+            }
+
+            const service = flight.services[currentServiceIndex];
+            const template = SERVICE_TEMPLATES[service.type] || WHEELCHAIR_TEMPLATE_BASE;
+
+            document.getElementById('service-header-type').innerText = template.name || service.type;
+            document.getElementById('service-header-detail').innerText = `${service.paxName} • ${service.seat}`;
+            document.getElementById('service-rules-content').innerText = template.rules || "";
+            document.getElementById('service-info-box').classList.remove('visible');
+
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+            let globalIdx = 0;
+            template.groups.forEach(group => {
+                let html = `<div class="checklist-group"><div class="group-title">${group.title}</div>`;
+                group.items.forEach(itemText => {
+                    const isChecked = service.checks && service.checks[globalIdx] ? 'checked' : '';
+                    html += `
+                        <label class="check-item">
+                            <input type="checkbox" class="custom-checkbox" ${isChecked} onchange="updateCheck(${globalIdx}, this.checked)">
+                            <div class="check-text">${itemText}</div>
+                        </label>`;
+                    globalIdx++;
+                });
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+
+            // --- RENDERIZA PAINEL DE STATUS ---
+            const statusPanel = document.getElementById('status-panel');
+            const statusControls = document.getElementById('status-controls');
+            statusControls.innerHTML = '';
+            
+            const isWheelchair = ["WCHR","WCHS","WCHC","WCMP","WCBD","WCBW","WCLB"].includes(service.type);
+            const isTargetService = ["MAAS", "UMNR"].includes(service.type) || isWheelchair;
+            const isAVIH = service.type === "AVIH";
+
+            if (isTargetService || isAVIH) {
+                statusPanel.style.display = 'block';
+                
+                if (isAVIH) {
+                    const isDelivered = service.stage === 'ramp_delivered';
+                    statusControls.innerHTML = `
+                        <button class="btn-status ${isDelivered ? 'active-delivered' : ''}" onclick="setServiceStage('ramp_delivered')">
+                            ${isDelivered ? '✅' : '📦'} Entregue à Triagem
+                        </button>
+                    `;
+                } else {
+                    const isStandby = !service.stage || service.stage === 'standby'; 
+                    const isLounge = service.stage === 'lounge';
+                    
+                    statusControls.innerHTML = `
+                        <button class="btn-status ${isStandby ? 'active-standby' : ''}" onclick="setServiceStage('standby')">
+                            ${isStandby ? '🟠' : '⚪'} Em Standby
+                        </button>
+                        <button class="btn-status ${isLounge ? 'active-lounge' : ''}" onclick="setServiceStage('lounge')">
+                            ${isLounge ? '✅' : '🚪'} Na Sala de Embarque
+                        </button>
+                    `;
+                }
+            } else {
+                statusPanel.style.display = 'none';
+            }
+        }
+
+        window.setServiceStage = async (stage) => {
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const services = [...flight.services];
+            const currentStage = services[currentServiceIndex].stage;
+
+            if (services[currentServiceIndex].type === 'AVIH' && currentStage === stage) {
+                services[currentServiceIndex].stage = null; 
+            } else {
+                services[currentServiceIndex].stage = stage;
+            }
+
+            await updateDoc(doc(db, "voos", currentFlightId), { services: services });
+        };
+
+
+        // --- MODAL TASKS ---
+        window.openTaskModal = () => document.getElementById('modal-task').style.display = 'flex';
+        window.addTask = async () => {
+            const text = document.getElementById('new-task-text').value;
+            const priority = document.getElementById('new-task-priority').value;
+            if(!text) return;
+            const flightRef = doc(db, "voos", currentFlightId);
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const currentTasks = flight.tasks || [];
+            const newTask = { id: Date.now(), text: text, priority: priority, done: false, createdAt: Date.now() };
+            await updateDoc(flightRef, { tasks: [...currentTasks, newTask] });
+            document.getElementById('new-task-text').value = '';
+            closeModals();
+        };
+        window.toggleTask = async (taskId) => {
+            const flight = localFlights.find(f => f.id === currentFlightId);
+            const tasks = [...(flight.tasks || [])];
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex > -1) {
+                tasks[taskIndex].done = !tasks[taskIndex].done;
+                await updateDoc(doc(db, "voos", currentFlightId), { tasks });
+            }
+        };
+        window.deleteTask = async (taskId) => {
+             if(!confirm("Excluir tarefa?")) return;
+             const flight = localFlights.find(f => f.id === currentFlightId);
+             const tasks = (flight.tasks || []).filter(t => t.id !== taskId);
+            await updateDoc(doc(db, "voos", currentFlightId), { tasks });
+        };
+
+        // --- FUNÇÕES GERAIS ---
         window.mostrarAlerta = (role, text, userEmail) => {
             const overlay = document.getElementById('alert-overlay');
             const authorText = document.getElementById('alert-author-text');
             const msgText = document.getElementById('alert-msg-text');
-            
             authorText.innerHTML = `Mensagem de <strong>${role}</strong> (${userEmail.split('@')[0]})`;
             msgText.innerText = text;
-            
             overlay.style.display = 'flex';
-            
-            // Som de alerta (opcional, vibração em mobile)
             if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
         };
-
-        window.fecharAlerta = () => {
-            document.getElementById('alert-overlay').style.display = 'none';
-        };
+        window.fecharAlerta = () => { document.getElementById('alert-overlay').style.display = 'none'; };
 
         window.addComment = async () => {
             const input = document.getElementById('input-comment');
             const text = input.value.trim();
             if(!text) return;
-
             const flightRef = doc(db, "voos", currentFlightId);
             const flight = localFlights.find(f => f.id === currentFlightId);
             const currentComments = flight.comments || [];
-
-            const newComment = {
-                text: text,
-                user: currentUserEmail,
-                role: currentRole, // Salva o cargo junto com a mensagem
-                timestamp: Date.now()
-            };
-
+            const newComment = { text: text, user: currentUserEmail, role: currentRole, timestamp: Date.now() };
             await updateDoc(flightRef, { comments: [...currentComments, newComment] });
             input.value = '';
         };
 
-        // --- TEMPLATES DE CHECKLISTS (COMPLETO) ---
-        
+        // --- TEMPLATES COMPLETOS (TEXTO ORIGINAL) ---
         const WHEELCHAIR_TEMPLATE_BASE = {
             rules: "• WCHR: Passageiro sobe escadas, mas não caminha longas distâncias.",
             groups: [
@@ -1151,7 +1528,6 @@
             }
         };
 
-        // Adiciona WCHR (e garante que funcione)
         const wheelchairCodes = ["WCHR"];
         wheelchairCodes.forEach(code => {
             SERVICE_TEMPLATES[code] = {
@@ -1160,106 +1536,43 @@
             };
         });
 
-        window.openService = (index) => {
-            currentServiceIndex = index;
-            const flight = localFlights.find(f => f.id === currentFlightId);
-            const service = flight.services[index];
-            const template = SERVICE_TEMPLATES[service.type];
-
-            if(!template) {
-                alert("Erro: Template não encontrado para " + service.type);
-                return;
-            }
-
-            document.getElementById('service-header-type').innerText = template.name;
-            document.getElementById('service-header-detail').innerText = `${service.paxName} • ${service.seat}`;
-            document.getElementById('service-rules-content').innerText = template.rules;
-            document.getElementById('service-info-box').classList.remove('visible');
-
-            const container = document.getElementById('checklist-container');
-            container.innerHTML = '';
-
-            let globalIdx = 0;
-            template.groups.forEach(group => {
-                let html = `<div class="checklist-group"><div class="group-title">${group.title}</div>`;
-                group.items.forEach(itemText => {
-                    const isChecked = service.checks && service.checks[globalIdx] ? 'checked' : '';
-                    html += `
-                        <label class="check-item">
-                            <input type="checkbox" class="custom-checkbox" ${isChecked} onchange="updateCheck(${globalIdx}, this.checked)">
-                            <div class="check-text">${itemText}</div>
-                        </label>`;
-                    globalIdx++;
-                });
-                html += `</div>`;
-                container.innerHTML += html;
-            });
-            navTo('view-service');
-        };
-
-        // --- AÇÕES DE BANCO DE DADOS (WRITE) ---
-
+        // --- AÇÕES DB ---
         window.alterarStatusVoo = async (novoStatus) => {
             if(!currentFlightId) return;
-            const flightRef = doc(db, "voos", currentFlightId);
-            await updateDoc(flightRef, { status: novoStatus });
+            await updateDoc(doc(db, "voos", currentFlightId), { status: novoStatus });
         };
-
         window.addFlight = async () => {
             const code = document.getElementById('new-flight-code').value;
             const route = document.getElementById('new-flight-route').value;
             if(!code) return;
-
-            await addDoc(collection(db, "voos"), {
-                code, route, status: "status-aberto", services: [], comments: [], createdAt: Date.now()
-            });
-            
+            await addDoc(collection(db, "voos"), { code, route, status: "status-aberto", services: [], comments: [], tasks: [], createdAt: Date.now() });
             closeModals();
-            document.getElementById('new-flight-code').value = '';
-            document.getElementById('new-flight-route').value = '';
+            document.getElementById('new-flight-code').value = ''; document.getElementById('new-flight-route').value = '';
         };
-
-        window.deleteFlight = async (id) => {
-            if(confirm("Apagar voo?")) {
-                await deleteDoc(doc(db, "voos", id));
-            }
-        };
-
+        window.deleteFlight = async (id) => { if(confirm("Apagar voo?")) await deleteDoc(doc(db, "voos", id)); };
         window.addService = async () => {
             const type = document.getElementById('new-service-type').value;
             const pax = document.getElementById('new-service-pax').value;
             const seat = document.getElementById('new-service-seat').value;
             if(!pax) return;
-
-            const flightRef = doc(db, "voos", currentFlightId);
             const flight = localFlights.find(f => f.id === currentFlightId);
             const newServices = [...flight.services, { type, paxName: pax, seat: seat || "S/A", checks: {} }];
-
-            await updateDoc(flightRef, { services: newServices });
-            
-            closeModals();
-            document.getElementById('new-service-pax').value = '';
+            await updateDoc(doc(db, "voos", currentFlightId), { services: newServices });
+            closeModals(); document.getElementById('new-service-pax').value = '';
         };
-
         window.updateCheck = async (idx, checked) => {
-            const flightRef = doc(db, "voos", currentFlightId);
             const flight = localFlights.find(f => f.id === currentFlightId);
             const services = [...flight.services];
-            
             if(!services[currentServiceIndex].checks) services[currentServiceIndex].checks = {};
             services[currentServiceIndex].checks[idx] = checked;
-
-            await updateDoc(flightRef, { services: services });
+            await updateDoc(doc(db, "voos", currentFlightId), { services: services });
         };
-
         window.deletarServicoAtual = async () => {
             if(confirm("Remover serviço?")) {
-                const flightRef = doc(db, "voos", currentFlightId);
                 const flight = localFlights.find(f => f.id === currentFlightId);
                 const services = [...flight.services];
                 services.splice(currentServiceIndex, 1);
-
-                await updateDoc(flightRef, { services: services });
+                await updateDoc(doc(db, "voos", currentFlightId), { services: services });
                 navTo('view-flight');
             }
         };
@@ -1267,6 +1580,8 @@
         window.handleFabClick = () => {
             if(document.getElementById('view-dashboard').classList.contains('active')) {
                 document.getElementById('modal-flight').style.display = 'flex';
+            } else if (currentTab === 'arrival') {
+                document.getElementById('modal-arrival-item').style.display = 'flex';
             } else {
                 document.getElementById('modal-service').style.display = 'flex';
             }
